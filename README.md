@@ -1,4 +1,4 @@
-## Code and model to will be released soon :)
+## Code and model will be released soon :)
 
 ## :point_right: Super-Resolution visualization
 ### :honeybee: Urban100
