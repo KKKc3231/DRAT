@@ -13,7 +13,10 @@ This code is based on basicsr.
 
 - python >= 3.9
 - pytorch == 1.13.1
+```sh
+conda env create -n DRAT -f environment.yml
 
+```
 
 
 ## Code File Descriptions
