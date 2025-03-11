@@ -61,9 +61,12 @@ python generate_blur_testdata.py # for generate iso/aniso test datasets
 ```
 # For training:
 python train.py -opt=options/train/DRAT/setting1/x4/train_DRAT_x4.yml
-python train.py -opt=options/train/DRAT/setting2/x4/train_DRAT_x4.yml
-python train.py -opt=options/train/DRAT/setting3/x4/train_DRAT_x4.yml
+python train.py -opt=options/train/DRAT/setting2/x4/train_DRAT_div2krkx2.yml
+python train.py -opt=options/train/DRAT/setting3/x4/train_DRATGAN.yml
 ``
+
+### Test and Infer
+- To test and infer other image folders, run the commands below.
 # For testing:
 python test.py -opt=options/test/DRAT/setting1/x4/test_urban100.yml
 
