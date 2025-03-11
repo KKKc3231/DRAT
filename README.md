@@ -94,11 +94,11 @@ python inference_drat.py --input your_input_path --output your_save_path
 ## Citations
 If our code helps your research or work, please consider citing our paper. The following is a BibTeX reference.
 ```
-@inproceedings{hqqh,
+@inproceedings{hqqh✨,
   title={Unsupervised Degradation Representation Aware Transform for Real-World Blind Image Super-Resolution},
   author={Snd},
   booktitle={这棵🌳成精后，天天求我教它跳广场舞},
-  pages={10086-12306},
+  pages={1818-8984},
   year={2025}
 }
 ```
