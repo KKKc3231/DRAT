@@ -40,7 +40,9 @@ You can use the following commands to train and test:
 ## Dataset Prearation
 - We use DIV2K and Flickr2K as our training datasets (totally 3450 images). 
 
-- For more details about the dataset, please see [DatasetPreparation](https://github.com/XPixelGroup/BasicSR/blob/master/docs/DatasetPreparation.md), which has a detailed introduction
+- For more details about the dataset, please see [DatasetPreparation](https://github.com/XPixelGroup/BasicSR/blob/master/docs/DatasetPreparation.md), which has a detailed introduction.
+
+- For Anisotropic Gaussian kernels degradation, you can download DIV2KRK test datasets from [DIV2KRK](https://data.vision.ee.ethz.ch/cvl/DIV2K/).
 ```python
 cd degradation/scripts/
 python extract_subimages.py # crop the images to subimages
