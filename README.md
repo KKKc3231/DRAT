@@ -44,4 +44,7 @@ python train.py -opt=options/train/DRAT/setting1/x4/train_DRAT_x4.yml
 
 # For testing:
 python test.py -opt=options/test/DRAT/setting1/x4/test_urban100.yml
+
+# For inference
+
 ```
