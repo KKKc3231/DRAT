@@ -38,7 +38,9 @@ python setup.py develop
 You can use the following commands to train and test:
 
 ## Dataset Prearation
-We use DIV2K and Flickr2K as our training datasets (totally 3450 images). 
+- We use DIV2K and Flickr2K as our training datasets (totally 3450 images). 
+
+- For more details about the dataset, please see [DatasetPreparation](https://github.com/XPixelGroup/BasicSR/blob/master/docs/DatasetPreparation.md), which has a detailed introduction
 ```python
 cd degradation/scripts/
 python extract_subimages.py # crop the images to subimages
