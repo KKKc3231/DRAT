@@ -40,7 +40,13 @@ You can use the following commands to train and test:
 ## Dataset Prearation
 We use DIV2K and Flickr2K as our training datasets (totally 3450 images). 
 ```python
+cd degradation/scripts/
+python extract_subimages.py # crop the images to subimages
 
+# getting degradation training data
+python generate_blur_traindata.py # for iso/aniso blind sr (for training)
+python generate_realesrgan_data.py # for real-world sr (for training)
+python generate_blur_testdata.py # for generate iso/aniso test datasets
 ```
 
 - you can use the following code to generate the blind-sr dataset.
