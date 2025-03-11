@@ -1,0 +1,45 @@
+name: DRAT_div2krkx2
+model_type: SRModel
+scale: 2
+num_gpu: 1  # set num_gpu: 0 for cpu mode
+manual_seed: 0
+
+datasets:
+  test_1:
+    name: div2krkx2
+    type: PairedImageDataset
+    dataroot_gt: /data/chensen/test_data/gt
+    dataroot_lq: /data/chensen/test_data/lr_x2
+    io_backend:
+      type: disk
+
+# network structures
+network_g:
+  type: DRATNet
+  num_in_ch: 3
+  num_out_ch: 3
+  scale: 2
+  num_feat: 64
+  num_block: 10
+  num_grow_ch: 24
+
+# path
+path:
+  pretrain_network_g: /data/chensen/code/BasicSR/checkpoint/DRAT/setting2/DRAT_div2krk_x2.pth
+  param_key_g: params_ema
+  strict_load_g: false
+
+# validation settings
+val:
+  save_img: True
+  suffix: ~  # add suffix to saved images, if None, use exp name
+
+  metrics:
+    psnr: # metric name, can be arbitrary
+      type: calculate_psnr
+      crop_border: 2
+      test_y_channel: True
+    ssim:
+      type: calculate_ssim
+      crop_border: 2
+      test_y_channel: True

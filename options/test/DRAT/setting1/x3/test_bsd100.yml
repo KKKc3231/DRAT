@@ -1,0 +1,129 @@
+name: DRAT_x3_BSD100
+model_type: SRModel
+scale: 3
+num_gpu: 1  # set num_gpu: 0 for cpu mode
+manual_seed: 0
+
+datasets:
+  test_1:
+    name: BSD100-1.35
+    type: PairedImageDataset
+    dataroot_gt: /data/chensen/test_data/dataset/BSD100G8/HR/x3/1.35/
+    dataroot_lq: /data/chensen/test_data/dataset/BSD100G8/LRblur/x3/1.35/
+    io_backend:
+      type: disk
+  test_2:
+    name: BSD100-1.5
+    type: PairedImageDataset
+    dataroot_gt: /data/chensen/test_data/dataset/BSD100G8/HR/x3/1.5/
+    dataroot_lq: /data/chensen/test_data/dataset/BSD100G8/LRblur/x3/1.5/
+    io_backend:
+      type: disk
+  test_3:
+    name: BSD100-1.65
+    type: PairedImageDataset
+    dataroot_gt: /data/chensen/test_data/dataset/BSD100G8/HR/x3/1.65/
+    dataroot_lq: /data/chensen/test_data/dataset/BSD100G8/LRblur/x3/1.65/
+    io_backend:
+      type: disk
+  test_4:
+    name: BSD100-1.8
+    type: PairedImageDataset
+    dataroot_gt: /data/chensen/test_data/dataset/BSD100G8/HR/x3/1.8/ 
+    dataroot_lq: /data/chensen/test_data/dataset/BSD100G8/LRblur/x3/1.8/
+    io_backend:
+      type: disk
+  test_5:
+    name: BSD100-1.95
+    type: PairedImageDataset
+    dataroot_gt: /data/chensen/test_data/dataset/BSD100G8/HR/x3/1.95/
+    dataroot_lq: /data/chensen/test_data/dataset/BSD100G8/LRblur/x3/1.95/
+    io_backend:
+      type: disk
+  test_6:
+    name: BSD100-2.0999999999999996
+    type: PairedImageDataset
+    dataroot_gt: /data/chensen/test_data/dataset/BSD100G8/HR/x3/2.1/
+    dataroot_lq: /data/chensen/test_data/dataset/BSD100G8/LRblur/x3/2.1/
+    io_backend:
+      type: disk
+  test_7:
+    name: BSD100-2.25
+    type: PairedImageDataset
+    dataroot_gt: /data/chensen/test_data/dataset/BSD100G8/HR/x3/2.25/
+    dataroot_lq: /data/chensen/test_data/dataset/BSD100G8/LRblur/x3/2.25/
+    io_backend:
+      type: disk
+  test_8:
+    name: BSD100-2.4
+    type: PairedImageDataset
+    dataroot_gt: /data/chensen/test_data/dataset/BSD100G8/HR/x3/2.4/
+    dataroot_lq: /data/chensen/test_data/dataset/BSD100G8/LRblur/x3/2.4/
+    io_backend:
+      type: disk
+  test_9:
+    name: BSD100newx3-0.2
+    type: PairedImageDataset
+    dataroot_gt: /data/chensen/test_data/dataset/BSD100newx3G8/HR/x3/0.2
+    dataroot_lq: /data/chensen/test_data/dataset/BSD100newx3G8/LRblur/x3/0.2
+    io_backend:
+      type: disk
+  test_10:
+    name: BSD100newx3-0.4
+    type: PairedImageDataset
+    dataroot_gt: /data/chensen/test_data/dataset/BSD100newx3G8/HR/x3/0.4
+    dataroot_lq: /data/chensen/test_data/dataset/BSD100newx3G8/LRblur/x3/0.4
+    io_backend:
+      type: disk
+  test_11:
+    name: BSD100newx3-0.6
+    type: PairedImageDataset
+    dataroot_gt: /data/chensen/test_data/dataset/BSD100newx3G8/HR/x3/0.6
+    dataroot_lq: /data/chensen/test_data/dataset/BSD100newx3G8/LRblur/x3/0.6
+    io_backend:
+      type: disk
+  test_12:
+    name: BSD100newx3-0.8
+    type: PairedImageDataset
+    dataroot_gt: /data/chensen/test_data/dataset/BSD100newx3G8/HR/x3/0.8
+    dataroot_lq: /data/chensen/test_data/dataset/BSD100newx3G8/LRblur/x3/0.8
+    io_backend:
+      type: disk
+  test_13:
+    name: BSD100newx3-1.0
+    type: PairedImageDataset
+    dataroot_gt: /data/chensen/test_data/dataset/BSD100newx3G8/HR/x3/1.0
+    dataroot_lq: /data/chensen/test_data/dataset/BSD100newx3G8/LRblur/x3/1.0
+    io_backend:
+      type: disk
+      
+# network structures
+network_g:
+  type: DRATNet
+  num_in_ch: 3
+  num_out_ch: 3
+  scale: 3
+  num_feat: 64
+  num_block: 10
+  num_grow_ch: 24
+
+# path
+path:
+  pretrain_network_g: /data/chensen/code/BasicSR/checkpoint/DRAT/setting1/DRAT_X3.pth  #/data/chensen/checkpoints/x3/DRAT_iso_x3.pth  #/
+  param_key_g: params_ema
+  strict_load_g: false
+
+# validation settings
+val:
+  save_img: False
+  suffix: ~  # add suffix to saved images, if None, use exp name
+
+  metrics:
+    psnr: # metric name, can be arbitrary
+      type: calculate_psnr
+      crop_border: 3
+      test_y_channel: True
+    ssim:
+      type: calculate_ssim
+      crop_border: 3
+      test_y_channel: True

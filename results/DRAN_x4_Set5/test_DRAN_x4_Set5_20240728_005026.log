@@ -1,0 +1,2762 @@
+2024-07-28 00:50:26,303 INFO: 
+                ____                _       _____  ____
+               / __ ) ____ _ _____ (_)_____/ ___/ / __ \
+              / __  |/ __ `// ___// // ___/\__ \ / /_/ /
+             / /_/ // /_/ /(__  )/ // /__ ___/ // _, _/
+            /_____/ \__,_//____//_/ \___//____//_/ |_|
+     ______                   __   __                 __      __
+    / ____/____   ____   ____/ /  / /   __  __ _____ / /__   / /
+   / / __ / __ \ / __ \ / __  /  / /   / / / // ___// //_/  / /
+  / /_/ // /_/ // /_/ // /_/ /  / /___/ /_/ // /__ / /<    /_/
+  \____/ \____/ \____/ \____/  /_____/\____/ \___//_/|_|  (_)
+    
+Version Information: 
+	BasicSR: 1.4.2
+	PyTorch: 1.13.1
+	TorchVision: 0.14.1
+2024-07-28 00:50:26,304 INFO: 
+  name: DRAN_x4_Set5
+  model_type: SRModel
+  scale: 4
+  num_gpu: 1
+  manual_seed: 0
+  datasets:[
+    test_1:[
+      name: Set5-bicubic
+      type: PairedImageDataset
+      dataroot_gt: /data/cs/BlindSR/datasets/Set5/GTmod12/
+      dataroot_lq: /data/cs/BlindSR/datasets/Set5/LRbicx4/
+      io_backend:[
+        type: disk
+      ]
+      phase: test
+      scale: 4
+    ]
+  ]
+  network_g:[
+    type: DRATNet
+    num_in_ch: 3
+    num_out_ch: 3
+    scale: 4
+    num_feat: 64
+    num_block: 10
+    num_grow_ch: 24
+  ]
+  path:[
+    pretrain_network_g: /data/cs/BlindSR/checkpoints/DRAT/DRAT_iso_260000_fft.pth
+    param_key_g: params_ema
+    strict_load_g: False
+    results_root: /data/cs/BlindSR/results/DRAN_x4_Set5
+    log: /data/cs/BlindSR/results/DRAN_x4_Set5
+    visualization: /data/cs/BlindSR/results/DRAN_x4_Set5/visualization
+  ]
+  val:[
+    save_img: True
+    suffix: iso
+    metrics:[
+      psnr:[
+        type: calculate_psnr
+        crop_border: 4
+        test_y_channel: True
+      ]
+      ssim:[
+        type: calculate_ssim
+        crop_border: 4
+        test_y_channel: True
+      ]
+    ]
+  ]
+  dist: False
+  rank: 0
+  world_size: 1
+  auto_resume: False
+  is_train: False
+
+2024-07-28 00:50:26,304 INFO: Dataset [PairedImageDataset] - Set5-bicubic is built.
+2024-07-28 00:50:26,304 INFO: Number of test images in Set5-bicubic: 5
+2024-07-28 00:50:26,504 INFO: Network [DRATNet] is created.
+2024-07-28 00:50:26,658 INFO: Network: DRATNet, with parameters: 8,422,495
+2024-07-28 00:50:26,658 INFO: DRATNet(
+  (compress1): Linear(in_features=256, out_features=128, bias=True)
+  (compress2): Linear(in_features=128, out_features=64, bias=True)
+  (conv_first): Conv2d(3, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+  (body): Sequential(
+    (0): RRDB(
+      (rdb1): ResidualDenseBlock(
+        (conv1): Conv2d(128, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv2): Conv2d(88, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv3): Conv2d(112, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv4): Conv2d(136, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv5): Conv2d(160, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (kernel): Sequential(
+          (0): Linear(in_features=64, out_features=64, bias=False)
+          (1): LeakyReLU(negative_slope=0.1, inplace=True)
+          (2): Linear(in_features=64, out_features=576, bias=False)
+        )
+        (conv): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+        (eca): ECA_layer(
+          (avg_pool): AdaptiveAvgPool2d(output_size=1)
+          (conv): Conv1d(1, 1, kernel_size=(3,), stride=(1,), padding=(1,), bias=False)
+          (sigmoid): Sigmoid()
+        )
+        (lrelu): LeakyReLU(negative_slope=0.2, inplace=True)
+        (osa): GDA_Block(
+          (layer): Sequential(
+            (0): MBConvResidual(
+              (fn): Sequential(
+                (0): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+                (1): GELU(approximate='none')
+                (2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=64)
+                (3): GELU(approximate='none')
+                (4): SqueezeExcitation(
+                  (gate): Sequential(
+                    (0): Reduce('b c h w -> b c', 'mean')
+                    (1): Linear(in_features=64, out_features=16, bias=False)
+                    (2): SiLU()
+                    (3): Linear(in_features=16, out_features=64, bias=False)
+                    (4): Sigmoid()
+                    (5): Rearrange('b c -> b c 1 1')
+                  )
+                )
+                (5): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+              )
+              (dropsample): Dropsample()
+            )
+            (1): Rearrange('b d (x w1) (y w2) -> b x y w1 w2 d', w1=1, w2=1)
+            (2): PreNormResidual(
+              (norm): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+              (fn): Attention(
+                (to_qkv): Linear(in_features=64, out_features=192, bias=False)
+                (attend): Sequential(
+                  (0): Softmax(dim=-1)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+                (to_out): Sequential(
+                  (0): Linear(in_features=64, out_features=64, bias=False)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+              )
+            )
+            (3): Rearrange('b x y w1 w2 d -> b d (x w1) (y w2)')
+            (4): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (5): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Channel_Attention(
+                (qkv): Conv2d(64, 192, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (qkv_dwconv): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (6): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (7): Rearrange('b d (w1 x) (w2 y) -> b x y w1 w2 d', w1=1, w2=1)
+            (8): PreNormResidual(
+              (norm): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+              (fn): Attention(
+                (to_qkv): Linear(in_features=64, out_features=192, bias=False)
+                (attend): Sequential(
+                  (0): Softmax(dim=-1)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+                (to_out): Sequential(
+                  (0): Linear(in_features=64, out_features=64, bias=False)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+              )
+            )
+            (9): Rearrange('b x y w1 w2 d -> b d (w1 x) (w2 y)')
+            (10): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (11): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Channel_Attention_grid(
+                (qkv): Conv2d(64, 192, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (qkv_dwconv): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (12): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+          )
+        )
+        (aff): DRT(
+          (fc): Sequential(
+            (0): Linear(in_features=64, out_features=96, bias=True)
+            (1): ReLU(inplace=True)
+            (2): Linear(in_features=96, out_features=96, bias=True)
+            (3): ReLU(inplace=True)
+            (4): Linear(in_features=96, out_features=128, bias=True)
+          )
+        )
+      )
+      (rdb2): ResidualDenseBlock(
+        (conv1): Conv2d(128, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv2): Conv2d(88, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv3): Conv2d(112, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv4): Conv2d(136, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv5): Conv2d(160, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (kernel): Sequential(
+          (0): Linear(in_features=64, out_features=64, bias=False)
+          (1): LeakyReLU(negative_slope=0.1, inplace=True)
+          (2): Linear(in_features=64, out_features=576, bias=False)
+        )
+        (conv): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+        (eca): ECA_layer(
+          (avg_pool): AdaptiveAvgPool2d(output_size=1)
+          (conv): Conv1d(1, 1, kernel_size=(3,), stride=(1,), padding=(1,), bias=False)
+          (sigmoid): Sigmoid()
+        )
+        (lrelu): LeakyReLU(negative_slope=0.2, inplace=True)
+        (osa): GDA_Block(
+          (layer): Sequential(
+            (0): MBConvResidual(
+              (fn): Sequential(
+                (0): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+                (1): GELU(approximate='none')
+                (2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=64)
+                (3): GELU(approximate='none')
+                (4): SqueezeExcitation(
+                  (gate): Sequential(
+                    (0): Reduce('b c h w -> b c', 'mean')
+                    (1): Linear(in_features=64, out_features=16, bias=False)
+                    (2): SiLU()
+                    (3): Linear(in_features=16, out_features=64, bias=False)
+                    (4): Sigmoid()
+                    (5): Rearrange('b c -> b c 1 1')
+                  )
+                )
+                (5): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+              )
+              (dropsample): Dropsample()
+            )
+            (1): Rearrange('b d (x w1) (y w2) -> b x y w1 w2 d', w1=1, w2=1)
+            (2): PreNormResidual(
+              (norm): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+              (fn): Attention(
+                (to_qkv): Linear(in_features=64, out_features=192, bias=False)
+                (attend): Sequential(
+                  (0): Softmax(dim=-1)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+                (to_out): Sequential(
+                  (0): Linear(in_features=64, out_features=64, bias=False)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+              )
+            )
+            (3): Rearrange('b x y w1 w2 d -> b d (x w1) (y w2)')
+            (4): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (5): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Channel_Attention(
+                (qkv): Conv2d(64, 192, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (qkv_dwconv): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (6): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (7): Rearrange('b d (w1 x) (w2 y) -> b x y w1 w2 d', w1=1, w2=1)
+            (8): PreNormResidual(
+              (norm): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+              (fn): Attention(
+                (to_qkv): Linear(in_features=64, out_features=192, bias=False)
+                (attend): Sequential(
+                  (0): Softmax(dim=-1)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+                (to_out): Sequential(
+                  (0): Linear(in_features=64, out_features=64, bias=False)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+              )
+            )
+            (9): Rearrange('b x y w1 w2 d -> b d (w1 x) (w2 y)')
+            (10): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (11): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Channel_Attention_grid(
+                (qkv): Conv2d(64, 192, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (qkv_dwconv): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (12): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+          )
+        )
+        (aff): DRT(
+          (fc): Sequential(
+            (0): Linear(in_features=64, out_features=96, bias=True)
+            (1): ReLU(inplace=True)
+            (2): Linear(in_features=96, out_features=96, bias=True)
+            (3): ReLU(inplace=True)
+            (4): Linear(in_features=96, out_features=128, bias=True)
+          )
+        )
+      )
+    )
+    (1): RRDB(
+      (rdb1): ResidualDenseBlock(
+        (conv1): Conv2d(128, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv2): Conv2d(88, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv3): Conv2d(112, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv4): Conv2d(136, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv5): Conv2d(160, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (kernel): Sequential(
+          (0): Linear(in_features=64, out_features=64, bias=False)
+          (1): LeakyReLU(negative_slope=0.1, inplace=True)
+          (2): Linear(in_features=64, out_features=576, bias=False)
+        )
+        (conv): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+        (eca): ECA_layer(
+          (avg_pool): AdaptiveAvgPool2d(output_size=1)
+          (conv): Conv1d(1, 1, kernel_size=(3,), stride=(1,), padding=(1,), bias=False)
+          (sigmoid): Sigmoid()
+        )
+        (lrelu): LeakyReLU(negative_slope=0.2, inplace=True)
+        (osa): GDA_Block(
+          (layer): Sequential(
+            (0): MBConvResidual(
+              (fn): Sequential(
+                (0): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+                (1): GELU(approximate='none')
+                (2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=64)
+                (3): GELU(approximate='none')
+                (4): SqueezeExcitation(
+                  (gate): Sequential(
+                    (0): Reduce('b c h w -> b c', 'mean')
+                    (1): Linear(in_features=64, out_features=16, bias=False)
+                    (2): SiLU()
+                    (3): Linear(in_features=16, out_features=64, bias=False)
+                    (4): Sigmoid()
+                    (5): Rearrange('b c -> b c 1 1')
+                  )
+                )
+                (5): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+              )
+              (dropsample): Dropsample()
+            )
+            (1): Rearrange('b d (x w1) (y w2) -> b x y w1 w2 d', w1=1, w2=1)
+            (2): PreNormResidual(
+              (norm): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+              (fn): Attention(
+                (to_qkv): Linear(in_features=64, out_features=192, bias=False)
+                (attend): Sequential(
+                  (0): Softmax(dim=-1)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+                (to_out): Sequential(
+                  (0): Linear(in_features=64, out_features=64, bias=False)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+              )
+            )
+            (3): Rearrange('b x y w1 w2 d -> b d (x w1) (y w2)')
+            (4): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (5): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Channel_Attention(
+                (qkv): Conv2d(64, 192, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (qkv_dwconv): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (6): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (7): Rearrange('b d (w1 x) (w2 y) -> b x y w1 w2 d', w1=1, w2=1)
+            (8): PreNormResidual(
+              (norm): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+              (fn): Attention(
+                (to_qkv): Linear(in_features=64, out_features=192, bias=False)
+                (attend): Sequential(
+                  (0): Softmax(dim=-1)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+                (to_out): Sequential(
+                  (0): Linear(in_features=64, out_features=64, bias=False)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+              )
+            )
+            (9): Rearrange('b x y w1 w2 d -> b d (w1 x) (w2 y)')
+            (10): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (11): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Channel_Attention_grid(
+                (qkv): Conv2d(64, 192, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (qkv_dwconv): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (12): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+          )
+        )
+        (aff): DRT(
+          (fc): Sequential(
+            (0): Linear(in_features=64, out_features=96, bias=True)
+            (1): ReLU(inplace=True)
+            (2): Linear(in_features=96, out_features=96, bias=True)
+            (3): ReLU(inplace=True)
+            (4): Linear(in_features=96, out_features=128, bias=True)
+          )
+        )
+      )
+      (rdb2): ResidualDenseBlock(
+        (conv1): Conv2d(128, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv2): Conv2d(88, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv3): Conv2d(112, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv4): Conv2d(136, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv5): Conv2d(160, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (kernel): Sequential(
+          (0): Linear(in_features=64, out_features=64, bias=False)
+          (1): LeakyReLU(negative_slope=0.1, inplace=True)
+          (2): Linear(in_features=64, out_features=576, bias=False)
+        )
+        (conv): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+        (eca): ECA_layer(
+          (avg_pool): AdaptiveAvgPool2d(output_size=1)
+          (conv): Conv1d(1, 1, kernel_size=(3,), stride=(1,), padding=(1,), bias=False)
+          (sigmoid): Sigmoid()
+        )
+        (lrelu): LeakyReLU(negative_slope=0.2, inplace=True)
+        (osa): GDA_Block(
+          (layer): Sequential(
+            (0): MBConvResidual(
+              (fn): Sequential(
+                (0): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+                (1): GELU(approximate='none')
+                (2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=64)
+                (3): GELU(approximate='none')
+                (4): SqueezeExcitation(
+                  (gate): Sequential(
+                    (0): Reduce('b c h w -> b c', 'mean')
+                    (1): Linear(in_features=64, out_features=16, bias=False)
+                    (2): SiLU()
+                    (3): Linear(in_features=16, out_features=64, bias=False)
+                    (4): Sigmoid()
+                    (5): Rearrange('b c -> b c 1 1')
+                  )
+                )
+                (5): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+              )
+              (dropsample): Dropsample()
+            )
+            (1): Rearrange('b d (x w1) (y w2) -> b x y w1 w2 d', w1=1, w2=1)
+            (2): PreNormResidual(
+              (norm): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+              (fn): Attention(
+                (to_qkv): Linear(in_features=64, out_features=192, bias=False)
+                (attend): Sequential(
+                  (0): Softmax(dim=-1)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+                (to_out): Sequential(
+                  (0): Linear(in_features=64, out_features=64, bias=False)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+              )
+            )
+            (3): Rearrange('b x y w1 w2 d -> b d (x w1) (y w2)')
+            (4): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (5): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Channel_Attention(
+                (qkv): Conv2d(64, 192, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (qkv_dwconv): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (6): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (7): Rearrange('b d (w1 x) (w2 y) -> b x y w1 w2 d', w1=1, w2=1)
+            (8): PreNormResidual(
+              (norm): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+              (fn): Attention(
+                (to_qkv): Linear(in_features=64, out_features=192, bias=False)
+                (attend): Sequential(
+                  (0): Softmax(dim=-1)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+                (to_out): Sequential(
+                  (0): Linear(in_features=64, out_features=64, bias=False)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+              )
+            )
+            (9): Rearrange('b x y w1 w2 d -> b d (w1 x) (w2 y)')
+            (10): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (11): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Channel_Attention_grid(
+                (qkv): Conv2d(64, 192, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (qkv_dwconv): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (12): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+          )
+        )
+        (aff): DRT(
+          (fc): Sequential(
+            (0): Linear(in_features=64, out_features=96, bias=True)
+            (1): ReLU(inplace=True)
+            (2): Linear(in_features=96, out_features=96, bias=True)
+            (3): ReLU(inplace=True)
+            (4): Linear(in_features=96, out_features=128, bias=True)
+          )
+        )
+      )
+    )
+    (2): RRDB(
+      (rdb1): ResidualDenseBlock(
+        (conv1): Conv2d(128, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv2): Conv2d(88, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv3): Conv2d(112, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv4): Conv2d(136, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv5): Conv2d(160, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (kernel): Sequential(
+          (0): Linear(in_features=64, out_features=64, bias=False)
+          (1): LeakyReLU(negative_slope=0.1, inplace=True)
+          (2): Linear(in_features=64, out_features=576, bias=False)
+        )
+        (conv): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+        (eca): ECA_layer(
+          (avg_pool): AdaptiveAvgPool2d(output_size=1)
+          (conv): Conv1d(1, 1, kernel_size=(3,), stride=(1,), padding=(1,), bias=False)
+          (sigmoid): Sigmoid()
+        )
+        (lrelu): LeakyReLU(negative_slope=0.2, inplace=True)
+        (osa): GDA_Block(
+          (layer): Sequential(
+            (0): MBConvResidual(
+              (fn): Sequential(
+                (0): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+                (1): GELU(approximate='none')
+                (2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=64)
+                (3): GELU(approximate='none')
+                (4): SqueezeExcitation(
+                  (gate): Sequential(
+                    (0): Reduce('b c h w -> b c', 'mean')
+                    (1): Linear(in_features=64, out_features=16, bias=False)
+                    (2): SiLU()
+                    (3): Linear(in_features=16, out_features=64, bias=False)
+                    (4): Sigmoid()
+                    (5): Rearrange('b c -> b c 1 1')
+                  )
+                )
+                (5): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+              )
+              (dropsample): Dropsample()
+            )
+            (1): Rearrange('b d (x w1) (y w2) -> b x y w1 w2 d', w1=1, w2=1)
+            (2): PreNormResidual(
+              (norm): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+              (fn): Attention(
+                (to_qkv): Linear(in_features=64, out_features=192, bias=False)
+                (attend): Sequential(
+                  (0): Softmax(dim=-1)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+                (to_out): Sequential(
+                  (0): Linear(in_features=64, out_features=64, bias=False)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+              )
+            )
+            (3): Rearrange('b x y w1 w2 d -> b d (x w1) (y w2)')
+            (4): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (5): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Channel_Attention(
+                (qkv): Conv2d(64, 192, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (qkv_dwconv): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (6): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (7): Rearrange('b d (w1 x) (w2 y) -> b x y w1 w2 d', w1=1, w2=1)
+            (8): PreNormResidual(
+              (norm): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+              (fn): Attention(
+                (to_qkv): Linear(in_features=64, out_features=192, bias=False)
+                (attend): Sequential(
+                  (0): Softmax(dim=-1)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+                (to_out): Sequential(
+                  (0): Linear(in_features=64, out_features=64, bias=False)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+              )
+            )
+            (9): Rearrange('b x y w1 w2 d -> b d (w1 x) (w2 y)')
+            (10): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (11): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Channel_Attention_grid(
+                (qkv): Conv2d(64, 192, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (qkv_dwconv): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (12): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+          )
+        )
+        (aff): DRT(
+          (fc): Sequential(
+            (0): Linear(in_features=64, out_features=96, bias=True)
+            (1): ReLU(inplace=True)
+            (2): Linear(in_features=96, out_features=96, bias=True)
+            (3): ReLU(inplace=True)
+            (4): Linear(in_features=96, out_features=128, bias=True)
+          )
+        )
+      )
+      (rdb2): ResidualDenseBlock(
+        (conv1): Conv2d(128, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv2): Conv2d(88, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv3): Conv2d(112, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv4): Conv2d(136, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv5): Conv2d(160, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (kernel): Sequential(
+          (0): Linear(in_features=64, out_features=64, bias=False)
+          (1): LeakyReLU(negative_slope=0.1, inplace=True)
+          (2): Linear(in_features=64, out_features=576, bias=False)
+        )
+        (conv): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+        (eca): ECA_layer(
+          (avg_pool): AdaptiveAvgPool2d(output_size=1)
+          (conv): Conv1d(1, 1, kernel_size=(3,), stride=(1,), padding=(1,), bias=False)
+          (sigmoid): Sigmoid()
+        )
+        (lrelu): LeakyReLU(negative_slope=0.2, inplace=True)
+        (osa): GDA_Block(
+          (layer): Sequential(
+            (0): MBConvResidual(
+              (fn): Sequential(
+                (0): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+                (1): GELU(approximate='none')
+                (2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=64)
+                (3): GELU(approximate='none')
+                (4): SqueezeExcitation(
+                  (gate): Sequential(
+                    (0): Reduce('b c h w -> b c', 'mean')
+                    (1): Linear(in_features=64, out_features=16, bias=False)
+                    (2): SiLU()
+                    (3): Linear(in_features=16, out_features=64, bias=False)
+                    (4): Sigmoid()
+                    (5): Rearrange('b c -> b c 1 1')
+                  )
+                )
+                (5): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+              )
+              (dropsample): Dropsample()
+            )
+            (1): Rearrange('b d (x w1) (y w2) -> b x y w1 w2 d', w1=1, w2=1)
+            (2): PreNormResidual(
+              (norm): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+              (fn): Attention(
+                (to_qkv): Linear(in_features=64, out_features=192, bias=False)
+                (attend): Sequential(
+                  (0): Softmax(dim=-1)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+                (to_out): Sequential(
+                  (0): Linear(in_features=64, out_features=64, bias=False)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+              )
+            )
+            (3): Rearrange('b x y w1 w2 d -> b d (x w1) (y w2)')
+            (4): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (5): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Channel_Attention(
+                (qkv): Conv2d(64, 192, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (qkv_dwconv): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (6): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (7): Rearrange('b d (w1 x) (w2 y) -> b x y w1 w2 d', w1=1, w2=1)
+            (8): PreNormResidual(
+              (norm): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+              (fn): Attention(
+                (to_qkv): Linear(in_features=64, out_features=192, bias=False)
+                (attend): Sequential(
+                  (0): Softmax(dim=-1)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+                (to_out): Sequential(
+                  (0): Linear(in_features=64, out_features=64, bias=False)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+              )
+            )
+            (9): Rearrange('b x y w1 w2 d -> b d (w1 x) (w2 y)')
+            (10): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (11): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Channel_Attention_grid(
+                (qkv): Conv2d(64, 192, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (qkv_dwconv): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (12): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+          )
+        )
+        (aff): DRT(
+          (fc): Sequential(
+            (0): Linear(in_features=64, out_features=96, bias=True)
+            (1): ReLU(inplace=True)
+            (2): Linear(in_features=96, out_features=96, bias=True)
+            (3): ReLU(inplace=True)
+            (4): Linear(in_features=96, out_features=128, bias=True)
+          )
+        )
+      )
+    )
+    (3): RRDB(
+      (rdb1): ResidualDenseBlock(
+        (conv1): Conv2d(128, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv2): Conv2d(88, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv3): Conv2d(112, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv4): Conv2d(136, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv5): Conv2d(160, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (kernel): Sequential(
+          (0): Linear(in_features=64, out_features=64, bias=False)
+          (1): LeakyReLU(negative_slope=0.1, inplace=True)
+          (2): Linear(in_features=64, out_features=576, bias=False)
+        )
+        (conv): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+        (eca): ECA_layer(
+          (avg_pool): AdaptiveAvgPool2d(output_size=1)
+          (conv): Conv1d(1, 1, kernel_size=(3,), stride=(1,), padding=(1,), bias=False)
+          (sigmoid): Sigmoid()
+        )
+        (lrelu): LeakyReLU(negative_slope=0.2, inplace=True)
+        (osa): GDA_Block(
+          (layer): Sequential(
+            (0): MBConvResidual(
+              (fn): Sequential(
+                (0): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+                (1): GELU(approximate='none')
+                (2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=64)
+                (3): GELU(approximate='none')
+                (4): SqueezeExcitation(
+                  (gate): Sequential(
+                    (0): Reduce('b c h w -> b c', 'mean')
+                    (1): Linear(in_features=64, out_features=16, bias=False)
+                    (2): SiLU()
+                    (3): Linear(in_features=16, out_features=64, bias=False)
+                    (4): Sigmoid()
+                    (5): Rearrange('b c -> b c 1 1')
+                  )
+                )
+                (5): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+              )
+              (dropsample): Dropsample()
+            )
+            (1): Rearrange('b d (x w1) (y w2) -> b x y w1 w2 d', w1=1, w2=1)
+            (2): PreNormResidual(
+              (norm): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+              (fn): Attention(
+                (to_qkv): Linear(in_features=64, out_features=192, bias=False)
+                (attend): Sequential(
+                  (0): Softmax(dim=-1)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+                (to_out): Sequential(
+                  (0): Linear(in_features=64, out_features=64, bias=False)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+              )
+            )
+            (3): Rearrange('b x y w1 w2 d -> b d (x w1) (y w2)')
+            (4): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (5): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Channel_Attention(
+                (qkv): Conv2d(64, 192, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (qkv_dwconv): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (6): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (7): Rearrange('b d (w1 x) (w2 y) -> b x y w1 w2 d', w1=1, w2=1)
+            (8): PreNormResidual(
+              (norm): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+              (fn): Attention(
+                (to_qkv): Linear(in_features=64, out_features=192, bias=False)
+                (attend): Sequential(
+                  (0): Softmax(dim=-1)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+                (to_out): Sequential(
+                  (0): Linear(in_features=64, out_features=64, bias=False)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+              )
+            )
+            (9): Rearrange('b x y w1 w2 d -> b d (w1 x) (w2 y)')
+            (10): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (11): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Channel_Attention_grid(
+                (qkv): Conv2d(64, 192, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (qkv_dwconv): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (12): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+          )
+        )
+        (aff): DRT(
+          (fc): Sequential(
+            (0): Linear(in_features=64, out_features=96, bias=True)
+            (1): ReLU(inplace=True)
+            (2): Linear(in_features=96, out_features=96, bias=True)
+            (3): ReLU(inplace=True)
+            (4): Linear(in_features=96, out_features=128, bias=True)
+          )
+        )
+      )
+      (rdb2): ResidualDenseBlock(
+        (conv1): Conv2d(128, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv2): Conv2d(88, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv3): Conv2d(112, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv4): Conv2d(136, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv5): Conv2d(160, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (kernel): Sequential(
+          (0): Linear(in_features=64, out_features=64, bias=False)
+          (1): LeakyReLU(negative_slope=0.1, inplace=True)
+          (2): Linear(in_features=64, out_features=576, bias=False)
+        )
+        (conv): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+        (eca): ECA_layer(
+          (avg_pool): AdaptiveAvgPool2d(output_size=1)
+          (conv): Conv1d(1, 1, kernel_size=(3,), stride=(1,), padding=(1,), bias=False)
+          (sigmoid): Sigmoid()
+        )
+        (lrelu): LeakyReLU(negative_slope=0.2, inplace=True)
+        (osa): GDA_Block(
+          (layer): Sequential(
+            (0): MBConvResidual(
+              (fn): Sequential(
+                (0): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+                (1): GELU(approximate='none')
+                (2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=64)
+                (3): GELU(approximate='none')
+                (4): SqueezeExcitation(
+                  (gate): Sequential(
+                    (0): Reduce('b c h w -> b c', 'mean')
+                    (1): Linear(in_features=64, out_features=16, bias=False)
+                    (2): SiLU()
+                    (3): Linear(in_features=16, out_features=64, bias=False)
+                    (4): Sigmoid()
+                    (5): Rearrange('b c -> b c 1 1')
+                  )
+                )
+                (5): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+              )
+              (dropsample): Dropsample()
+            )
+            (1): Rearrange('b d (x w1) (y w2) -> b x y w1 w2 d', w1=1, w2=1)
+            (2): PreNormResidual(
+              (norm): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+              (fn): Attention(
+                (to_qkv): Linear(in_features=64, out_features=192, bias=False)
+                (attend): Sequential(
+                  (0): Softmax(dim=-1)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+                (to_out): Sequential(
+                  (0): Linear(in_features=64, out_features=64, bias=False)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+              )
+            )
+            (3): Rearrange('b x y w1 w2 d -> b d (x w1) (y w2)')
+            (4): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (5): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Channel_Attention(
+                (qkv): Conv2d(64, 192, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (qkv_dwconv): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (6): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (7): Rearrange('b d (w1 x) (w2 y) -> b x y w1 w2 d', w1=1, w2=1)
+            (8): PreNormResidual(
+              (norm): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+              (fn): Attention(
+                (to_qkv): Linear(in_features=64, out_features=192, bias=False)
+                (attend): Sequential(
+                  (0): Softmax(dim=-1)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+                (to_out): Sequential(
+                  (0): Linear(in_features=64, out_features=64, bias=False)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+              )
+            )
+            (9): Rearrange('b x y w1 w2 d -> b d (w1 x) (w2 y)')
+            (10): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (11): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Channel_Attention_grid(
+                (qkv): Conv2d(64, 192, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (qkv_dwconv): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (12): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+          )
+        )
+        (aff): DRT(
+          (fc): Sequential(
+            (0): Linear(in_features=64, out_features=96, bias=True)
+            (1): ReLU(inplace=True)
+            (2): Linear(in_features=96, out_features=96, bias=True)
+            (3): ReLU(inplace=True)
+            (4): Linear(in_features=96, out_features=128, bias=True)
+          )
+        )
+      )
+    )
+    (4): RRDB(
+      (rdb1): ResidualDenseBlock(
+        (conv1): Conv2d(128, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv2): Conv2d(88, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv3): Conv2d(112, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv4): Conv2d(136, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv5): Conv2d(160, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (kernel): Sequential(
+          (0): Linear(in_features=64, out_features=64, bias=False)
+          (1): LeakyReLU(negative_slope=0.1, inplace=True)
+          (2): Linear(in_features=64, out_features=576, bias=False)
+        )
+        (conv): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+        (eca): ECA_layer(
+          (avg_pool): AdaptiveAvgPool2d(output_size=1)
+          (conv): Conv1d(1, 1, kernel_size=(3,), stride=(1,), padding=(1,), bias=False)
+          (sigmoid): Sigmoid()
+        )
+        (lrelu): LeakyReLU(negative_slope=0.2, inplace=True)
+        (osa): GDA_Block(
+          (layer): Sequential(
+            (0): MBConvResidual(
+              (fn): Sequential(
+                (0): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+                (1): GELU(approximate='none')
+                (2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=64)
+                (3): GELU(approximate='none')
+                (4): SqueezeExcitation(
+                  (gate): Sequential(
+                    (0): Reduce('b c h w -> b c', 'mean')
+                    (1): Linear(in_features=64, out_features=16, bias=False)
+                    (2): SiLU()
+                    (3): Linear(in_features=16, out_features=64, bias=False)
+                    (4): Sigmoid()
+                    (5): Rearrange('b c -> b c 1 1')
+                  )
+                )
+                (5): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+              )
+              (dropsample): Dropsample()
+            )
+            (1): Rearrange('b d (x w1) (y w2) -> b x y w1 w2 d', w1=1, w2=1)
+            (2): PreNormResidual(
+              (norm): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+              (fn): Attention(
+                (to_qkv): Linear(in_features=64, out_features=192, bias=False)
+                (attend): Sequential(
+                  (0): Softmax(dim=-1)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+                (to_out): Sequential(
+                  (0): Linear(in_features=64, out_features=64, bias=False)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+              )
+            )
+            (3): Rearrange('b x y w1 w2 d -> b d (x w1) (y w2)')
+            (4): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (5): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Channel_Attention(
+                (qkv): Conv2d(64, 192, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (qkv_dwconv): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (6): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (7): Rearrange('b d (w1 x) (w2 y) -> b x y w1 w2 d', w1=1, w2=1)
+            (8): PreNormResidual(
+              (norm): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+              (fn): Attention(
+                (to_qkv): Linear(in_features=64, out_features=192, bias=False)
+                (attend): Sequential(
+                  (0): Softmax(dim=-1)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+                (to_out): Sequential(
+                  (0): Linear(in_features=64, out_features=64, bias=False)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+              )
+            )
+            (9): Rearrange('b x y w1 w2 d -> b d (w1 x) (w2 y)')
+            (10): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (11): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Channel_Attention_grid(
+                (qkv): Conv2d(64, 192, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (qkv_dwconv): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (12): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+          )
+        )
+        (aff): DRT(
+          (fc): Sequential(
+            (0): Linear(in_features=64, out_features=96, bias=True)
+            (1): ReLU(inplace=True)
+            (2): Linear(in_features=96, out_features=96, bias=True)
+            (3): ReLU(inplace=True)
+            (4): Linear(in_features=96, out_features=128, bias=True)
+          )
+        )
+      )
+      (rdb2): ResidualDenseBlock(
+        (conv1): Conv2d(128, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv2): Conv2d(88, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv3): Conv2d(112, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv4): Conv2d(136, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv5): Conv2d(160, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (kernel): Sequential(
+          (0): Linear(in_features=64, out_features=64, bias=False)
+          (1): LeakyReLU(negative_slope=0.1, inplace=True)
+          (2): Linear(in_features=64, out_features=576, bias=False)
+        )
+        (conv): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+        (eca): ECA_layer(
+          (avg_pool): AdaptiveAvgPool2d(output_size=1)
+          (conv): Conv1d(1, 1, kernel_size=(3,), stride=(1,), padding=(1,), bias=False)
+          (sigmoid): Sigmoid()
+        )
+        (lrelu): LeakyReLU(negative_slope=0.2, inplace=True)
+        (osa): GDA_Block(
+          (layer): Sequential(
+            (0): MBConvResidual(
+              (fn): Sequential(
+                (0): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+                (1): GELU(approximate='none')
+                (2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=64)
+                (3): GELU(approximate='none')
+                (4): SqueezeExcitation(
+                  (gate): Sequential(
+                    (0): Reduce('b c h w -> b c', 'mean')
+                    (1): Linear(in_features=64, out_features=16, bias=False)
+                    (2): SiLU()
+                    (3): Linear(in_features=16, out_features=64, bias=False)
+                    (4): Sigmoid()
+                    (5): Rearrange('b c -> b c 1 1')
+                  )
+                )
+                (5): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+              )
+              (dropsample): Dropsample()
+            )
+            (1): Rearrange('b d (x w1) (y w2) -> b x y w1 w2 d', w1=1, w2=1)
+            (2): PreNormResidual(
+              (norm): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+              (fn): Attention(
+                (to_qkv): Linear(in_features=64, out_features=192, bias=False)
+                (attend): Sequential(
+                  (0): Softmax(dim=-1)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+                (to_out): Sequential(
+                  (0): Linear(in_features=64, out_features=64, bias=False)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+              )
+            )
+            (3): Rearrange('b x y w1 w2 d -> b d (x w1) (y w2)')
+            (4): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (5): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Channel_Attention(
+                (qkv): Conv2d(64, 192, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (qkv_dwconv): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (6): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (7): Rearrange('b d (w1 x) (w2 y) -> b x y w1 w2 d', w1=1, w2=1)
+            (8): PreNormResidual(
+              (norm): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+              (fn): Attention(
+                (to_qkv): Linear(in_features=64, out_features=192, bias=False)
+                (attend): Sequential(
+                  (0): Softmax(dim=-1)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+                (to_out): Sequential(
+                  (0): Linear(in_features=64, out_features=64, bias=False)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+              )
+            )
+            (9): Rearrange('b x y w1 w2 d -> b d (w1 x) (w2 y)')
+            (10): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (11): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Channel_Attention_grid(
+                (qkv): Conv2d(64, 192, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (qkv_dwconv): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (12): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+          )
+        )
+        (aff): DRT(
+          (fc): Sequential(
+            (0): Linear(in_features=64, out_features=96, bias=True)
+            (1): ReLU(inplace=True)
+            (2): Linear(in_features=96, out_features=96, bias=True)
+            (3): ReLU(inplace=True)
+            (4): Linear(in_features=96, out_features=128, bias=True)
+          )
+        )
+      )
+    )
+    (5): RRDB(
+      (rdb1): ResidualDenseBlock(
+        (conv1): Conv2d(128, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv2): Conv2d(88, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv3): Conv2d(112, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv4): Conv2d(136, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv5): Conv2d(160, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (kernel): Sequential(
+          (0): Linear(in_features=64, out_features=64, bias=False)
+          (1): LeakyReLU(negative_slope=0.1, inplace=True)
+          (2): Linear(in_features=64, out_features=576, bias=False)
+        )
+        (conv): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+        (eca): ECA_layer(
+          (avg_pool): AdaptiveAvgPool2d(output_size=1)
+          (conv): Conv1d(1, 1, kernel_size=(3,), stride=(1,), padding=(1,), bias=False)
+          (sigmoid): Sigmoid()
+        )
+        (lrelu): LeakyReLU(negative_slope=0.2, inplace=True)
+        (osa): GDA_Block(
+          (layer): Sequential(
+            (0): MBConvResidual(
+              (fn): Sequential(
+                (0): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+                (1): GELU(approximate='none')
+                (2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=64)
+                (3): GELU(approximate='none')
+                (4): SqueezeExcitation(
+                  (gate): Sequential(
+                    (0): Reduce('b c h w -> b c', 'mean')
+                    (1): Linear(in_features=64, out_features=16, bias=False)
+                    (2): SiLU()
+                    (3): Linear(in_features=16, out_features=64, bias=False)
+                    (4): Sigmoid()
+                    (5): Rearrange('b c -> b c 1 1')
+                  )
+                )
+                (5): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+              )
+              (dropsample): Dropsample()
+            )
+            (1): Rearrange('b d (x w1) (y w2) -> b x y w1 w2 d', w1=1, w2=1)
+            (2): PreNormResidual(
+              (norm): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+              (fn): Attention(
+                (to_qkv): Linear(in_features=64, out_features=192, bias=False)
+                (attend): Sequential(
+                  (0): Softmax(dim=-1)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+                (to_out): Sequential(
+                  (0): Linear(in_features=64, out_features=64, bias=False)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+              )
+            )
+            (3): Rearrange('b x y w1 w2 d -> b d (x w1) (y w2)')
+            (4): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (5): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Channel_Attention(
+                (qkv): Conv2d(64, 192, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (qkv_dwconv): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (6): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (7): Rearrange('b d (w1 x) (w2 y) -> b x y w1 w2 d', w1=1, w2=1)
+            (8): PreNormResidual(
+              (norm): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+              (fn): Attention(
+                (to_qkv): Linear(in_features=64, out_features=192, bias=False)
+                (attend): Sequential(
+                  (0): Softmax(dim=-1)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+                (to_out): Sequential(
+                  (0): Linear(in_features=64, out_features=64, bias=False)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+              )
+            )
+            (9): Rearrange('b x y w1 w2 d -> b d (w1 x) (w2 y)')
+            (10): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (11): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Channel_Attention_grid(
+                (qkv): Conv2d(64, 192, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (qkv_dwconv): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (12): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+          )
+        )
+        (aff): DRT(
+          (fc): Sequential(
+            (0): Linear(in_features=64, out_features=96, bias=True)
+            (1): ReLU(inplace=True)
+            (2): Linear(in_features=96, out_features=96, bias=True)
+            (3): ReLU(inplace=True)
+            (4): Linear(in_features=96, out_features=128, bias=True)
+          )
+        )
+      )
+      (rdb2): ResidualDenseBlock(
+        (conv1): Conv2d(128, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv2): Conv2d(88, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv3): Conv2d(112, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv4): Conv2d(136, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv5): Conv2d(160, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (kernel): Sequential(
+          (0): Linear(in_features=64, out_features=64, bias=False)
+          (1): LeakyReLU(negative_slope=0.1, inplace=True)
+          (2): Linear(in_features=64, out_features=576, bias=False)
+        )
+        (conv): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+        (eca): ECA_layer(
+          (avg_pool): AdaptiveAvgPool2d(output_size=1)
+          (conv): Conv1d(1, 1, kernel_size=(3,), stride=(1,), padding=(1,), bias=False)
+          (sigmoid): Sigmoid()
+        )
+        (lrelu): LeakyReLU(negative_slope=0.2, inplace=True)
+        (osa): GDA_Block(
+          (layer): Sequential(
+            (0): MBConvResidual(
+              (fn): Sequential(
+                (0): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+                (1): GELU(approximate='none')
+                (2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=64)
+                (3): GELU(approximate='none')
+                (4): SqueezeExcitation(
+                  (gate): Sequential(
+                    (0): Reduce('b c h w -> b c', 'mean')
+                    (1): Linear(in_features=64, out_features=16, bias=False)
+                    (2): SiLU()
+                    (3): Linear(in_features=16, out_features=64, bias=False)
+                    (4): Sigmoid()
+                    (5): Rearrange('b c -> b c 1 1')
+                  )
+                )
+                (5): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+              )
+              (dropsample): Dropsample()
+            )
+            (1): Rearrange('b d (x w1) (y w2) -> b x y w1 w2 d', w1=1, w2=1)
+            (2): PreNormResidual(
+              (norm): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+              (fn): Attention(
+                (to_qkv): Linear(in_features=64, out_features=192, bias=False)
+                (attend): Sequential(
+                  (0): Softmax(dim=-1)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+                (to_out): Sequential(
+                  (0): Linear(in_features=64, out_features=64, bias=False)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+              )
+            )
+            (3): Rearrange('b x y w1 w2 d -> b d (x w1) (y w2)')
+            (4): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (5): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Channel_Attention(
+                (qkv): Conv2d(64, 192, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (qkv_dwconv): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (6): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (7): Rearrange('b d (w1 x) (w2 y) -> b x y w1 w2 d', w1=1, w2=1)
+            (8): PreNormResidual(
+              (norm): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+              (fn): Attention(
+                (to_qkv): Linear(in_features=64, out_features=192, bias=False)
+                (attend): Sequential(
+                  (0): Softmax(dim=-1)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+                (to_out): Sequential(
+                  (0): Linear(in_features=64, out_features=64, bias=False)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+              )
+            )
+            (9): Rearrange('b x y w1 w2 d -> b d (w1 x) (w2 y)')
+            (10): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (11): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Channel_Attention_grid(
+                (qkv): Conv2d(64, 192, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (qkv_dwconv): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (12): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+          )
+        )
+        (aff): DRT(
+          (fc): Sequential(
+            (0): Linear(in_features=64, out_features=96, bias=True)
+            (1): ReLU(inplace=True)
+            (2): Linear(in_features=96, out_features=96, bias=True)
+            (3): ReLU(inplace=True)
+            (4): Linear(in_features=96, out_features=128, bias=True)
+          )
+        )
+      )
+    )
+    (6): RRDB(
+      (rdb1): ResidualDenseBlock(
+        (conv1): Conv2d(128, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv2): Conv2d(88, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv3): Conv2d(112, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv4): Conv2d(136, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv5): Conv2d(160, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (kernel): Sequential(
+          (0): Linear(in_features=64, out_features=64, bias=False)
+          (1): LeakyReLU(negative_slope=0.1, inplace=True)
+          (2): Linear(in_features=64, out_features=576, bias=False)
+        )
+        (conv): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+        (eca): ECA_layer(
+          (avg_pool): AdaptiveAvgPool2d(output_size=1)
+          (conv): Conv1d(1, 1, kernel_size=(3,), stride=(1,), padding=(1,), bias=False)
+          (sigmoid): Sigmoid()
+        )
+        (lrelu): LeakyReLU(negative_slope=0.2, inplace=True)
+        (osa): GDA_Block(
+          (layer): Sequential(
+            (0): MBConvResidual(
+              (fn): Sequential(
+                (0): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+                (1): GELU(approximate='none')
+                (2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=64)
+                (3): GELU(approximate='none')
+                (4): SqueezeExcitation(
+                  (gate): Sequential(
+                    (0): Reduce('b c h w -> b c', 'mean')
+                    (1): Linear(in_features=64, out_features=16, bias=False)
+                    (2): SiLU()
+                    (3): Linear(in_features=16, out_features=64, bias=False)
+                    (4): Sigmoid()
+                    (5): Rearrange('b c -> b c 1 1')
+                  )
+                )
+                (5): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+              )
+              (dropsample): Dropsample()
+            )
+            (1): Rearrange('b d (x w1) (y w2) -> b x y w1 w2 d', w1=1, w2=1)
+            (2): PreNormResidual(
+              (norm): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+              (fn): Attention(
+                (to_qkv): Linear(in_features=64, out_features=192, bias=False)
+                (attend): Sequential(
+                  (0): Softmax(dim=-1)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+                (to_out): Sequential(
+                  (0): Linear(in_features=64, out_features=64, bias=False)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+              )
+            )
+            (3): Rearrange('b x y w1 w2 d -> b d (x w1) (y w2)')
+            (4): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (5): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Channel_Attention(
+                (qkv): Conv2d(64, 192, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (qkv_dwconv): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (6): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (7): Rearrange('b d (w1 x) (w2 y) -> b x y w1 w2 d', w1=1, w2=1)
+            (8): PreNormResidual(
+              (norm): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+              (fn): Attention(
+                (to_qkv): Linear(in_features=64, out_features=192, bias=False)
+                (attend): Sequential(
+                  (0): Softmax(dim=-1)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+                (to_out): Sequential(
+                  (0): Linear(in_features=64, out_features=64, bias=False)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+              )
+            )
+            (9): Rearrange('b x y w1 w2 d -> b d (w1 x) (w2 y)')
+            (10): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (11): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Channel_Attention_grid(
+                (qkv): Conv2d(64, 192, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (qkv_dwconv): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (12): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+          )
+        )
+        (aff): DRT(
+          (fc): Sequential(
+            (0): Linear(in_features=64, out_features=96, bias=True)
+            (1): ReLU(inplace=True)
+            (2): Linear(in_features=96, out_features=96, bias=True)
+            (3): ReLU(inplace=True)
+            (4): Linear(in_features=96, out_features=128, bias=True)
+          )
+        )
+      )
+      (rdb2): ResidualDenseBlock(
+        (conv1): Conv2d(128, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv2): Conv2d(88, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv3): Conv2d(112, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv4): Conv2d(136, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv5): Conv2d(160, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (kernel): Sequential(
+          (0): Linear(in_features=64, out_features=64, bias=False)
+          (1): LeakyReLU(negative_slope=0.1, inplace=True)
+          (2): Linear(in_features=64, out_features=576, bias=False)
+        )
+        (conv): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+        (eca): ECA_layer(
+          (avg_pool): AdaptiveAvgPool2d(output_size=1)
+          (conv): Conv1d(1, 1, kernel_size=(3,), stride=(1,), padding=(1,), bias=False)
+          (sigmoid): Sigmoid()
+        )
+        (lrelu): LeakyReLU(negative_slope=0.2, inplace=True)
+        (osa): GDA_Block(
+          (layer): Sequential(
+            (0): MBConvResidual(
+              (fn): Sequential(
+                (0): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+                (1): GELU(approximate='none')
+                (2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=64)
+                (3): GELU(approximate='none')
+                (4): SqueezeExcitation(
+                  (gate): Sequential(
+                    (0): Reduce('b c h w -> b c', 'mean')
+                    (1): Linear(in_features=64, out_features=16, bias=False)
+                    (2): SiLU()
+                    (3): Linear(in_features=16, out_features=64, bias=False)
+                    (4): Sigmoid()
+                    (5): Rearrange('b c -> b c 1 1')
+                  )
+                )
+                (5): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+              )
+              (dropsample): Dropsample()
+            )
+            (1): Rearrange('b d (x w1) (y w2) -> b x y w1 w2 d', w1=1, w2=1)
+            (2): PreNormResidual(
+              (norm): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+              (fn): Attention(
+                (to_qkv): Linear(in_features=64, out_features=192, bias=False)
+                (attend): Sequential(
+                  (0): Softmax(dim=-1)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+                (to_out): Sequential(
+                  (0): Linear(in_features=64, out_features=64, bias=False)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+              )
+            )
+            (3): Rearrange('b x y w1 w2 d -> b d (x w1) (y w2)')
+            (4): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (5): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Channel_Attention(
+                (qkv): Conv2d(64, 192, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (qkv_dwconv): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (6): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (7): Rearrange('b d (w1 x) (w2 y) -> b x y w1 w2 d', w1=1, w2=1)
+            (8): PreNormResidual(
+              (norm): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+              (fn): Attention(
+                (to_qkv): Linear(in_features=64, out_features=192, bias=False)
+                (attend): Sequential(
+                  (0): Softmax(dim=-1)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+                (to_out): Sequential(
+                  (0): Linear(in_features=64, out_features=64, bias=False)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+              )
+            )
+            (9): Rearrange('b x y w1 w2 d -> b d (w1 x) (w2 y)')
+            (10): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (11): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Channel_Attention_grid(
+                (qkv): Conv2d(64, 192, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (qkv_dwconv): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (12): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+          )
+        )
+        (aff): DRT(
+          (fc): Sequential(
+            (0): Linear(in_features=64, out_features=96, bias=True)
+            (1): ReLU(inplace=True)
+            (2): Linear(in_features=96, out_features=96, bias=True)
+            (3): ReLU(inplace=True)
+            (4): Linear(in_features=96, out_features=128, bias=True)
+          )
+        )
+      )
+    )
+    (7): RRDB(
+      (rdb1): ResidualDenseBlock(
+        (conv1): Conv2d(128, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv2): Conv2d(88, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv3): Conv2d(112, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv4): Conv2d(136, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv5): Conv2d(160, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (kernel): Sequential(
+          (0): Linear(in_features=64, out_features=64, bias=False)
+          (1): LeakyReLU(negative_slope=0.1, inplace=True)
+          (2): Linear(in_features=64, out_features=576, bias=False)
+        )
+        (conv): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+        (eca): ECA_layer(
+          (avg_pool): AdaptiveAvgPool2d(output_size=1)
+          (conv): Conv1d(1, 1, kernel_size=(3,), stride=(1,), padding=(1,), bias=False)
+          (sigmoid): Sigmoid()
+        )
+        (lrelu): LeakyReLU(negative_slope=0.2, inplace=True)
+        (osa): GDA_Block(
+          (layer): Sequential(
+            (0): MBConvResidual(
+              (fn): Sequential(
+                (0): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+                (1): GELU(approximate='none')
+                (2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=64)
+                (3): GELU(approximate='none')
+                (4): SqueezeExcitation(
+                  (gate): Sequential(
+                    (0): Reduce('b c h w -> b c', 'mean')
+                    (1): Linear(in_features=64, out_features=16, bias=False)
+                    (2): SiLU()
+                    (3): Linear(in_features=16, out_features=64, bias=False)
+                    (4): Sigmoid()
+                    (5): Rearrange('b c -> b c 1 1')
+                  )
+                )
+                (5): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+              )
+              (dropsample): Dropsample()
+            )
+            (1): Rearrange('b d (x w1) (y w2) -> b x y w1 w2 d', w1=1, w2=1)
+            (2): PreNormResidual(
+              (norm): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+              (fn): Attention(
+                (to_qkv): Linear(in_features=64, out_features=192, bias=False)
+                (attend): Sequential(
+                  (0): Softmax(dim=-1)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+                (to_out): Sequential(
+                  (0): Linear(in_features=64, out_features=64, bias=False)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+              )
+            )
+            (3): Rearrange('b x y w1 w2 d -> b d (x w1) (y w2)')
+            (4): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (5): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Channel_Attention(
+                (qkv): Conv2d(64, 192, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (qkv_dwconv): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (6): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (7): Rearrange('b d (w1 x) (w2 y) -> b x y w1 w2 d', w1=1, w2=1)
+            (8): PreNormResidual(
+              (norm): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+              (fn): Attention(
+                (to_qkv): Linear(in_features=64, out_features=192, bias=False)
+                (attend): Sequential(
+                  (0): Softmax(dim=-1)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+                (to_out): Sequential(
+                  (0): Linear(in_features=64, out_features=64, bias=False)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+              )
+            )
+            (9): Rearrange('b x y w1 w2 d -> b d (w1 x) (w2 y)')
+            (10): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (11): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Channel_Attention_grid(
+                (qkv): Conv2d(64, 192, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (qkv_dwconv): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (12): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+          )
+        )
+        (aff): DRT(
+          (fc): Sequential(
+            (0): Linear(in_features=64, out_features=96, bias=True)
+            (1): ReLU(inplace=True)
+            (2): Linear(in_features=96, out_features=96, bias=True)
+            (3): ReLU(inplace=True)
+            (4): Linear(in_features=96, out_features=128, bias=True)
+          )
+        )
+      )
+      (rdb2): ResidualDenseBlock(
+        (conv1): Conv2d(128, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv2): Conv2d(88, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv3): Conv2d(112, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv4): Conv2d(136, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv5): Conv2d(160, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (kernel): Sequential(
+          (0): Linear(in_features=64, out_features=64, bias=False)
+          (1): LeakyReLU(negative_slope=0.1, inplace=True)
+          (2): Linear(in_features=64, out_features=576, bias=False)
+        )
+        (conv): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+        (eca): ECA_layer(
+          (avg_pool): AdaptiveAvgPool2d(output_size=1)
+          (conv): Conv1d(1, 1, kernel_size=(3,), stride=(1,), padding=(1,), bias=False)
+          (sigmoid): Sigmoid()
+        )
+        (lrelu): LeakyReLU(negative_slope=0.2, inplace=True)
+        (osa): GDA_Block(
+          (layer): Sequential(
+            (0): MBConvResidual(
+              (fn): Sequential(
+                (0): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+                (1): GELU(approximate='none')
+                (2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=64)
+                (3): GELU(approximate='none')
+                (4): SqueezeExcitation(
+                  (gate): Sequential(
+                    (0): Reduce('b c h w -> b c', 'mean')
+                    (1): Linear(in_features=64, out_features=16, bias=False)
+                    (2): SiLU()
+                    (3): Linear(in_features=16, out_features=64, bias=False)
+                    (4): Sigmoid()
+                    (5): Rearrange('b c -> b c 1 1')
+                  )
+                )
+                (5): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+              )
+              (dropsample): Dropsample()
+            )
+            (1): Rearrange('b d (x w1) (y w2) -> b x y w1 w2 d', w1=1, w2=1)
+            (2): PreNormResidual(
+              (norm): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+              (fn): Attention(
+                (to_qkv): Linear(in_features=64, out_features=192, bias=False)
+                (attend): Sequential(
+                  (0): Softmax(dim=-1)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+                (to_out): Sequential(
+                  (0): Linear(in_features=64, out_features=64, bias=False)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+              )
+            )
+            (3): Rearrange('b x y w1 w2 d -> b d (x w1) (y w2)')
+            (4): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (5): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Channel_Attention(
+                (qkv): Conv2d(64, 192, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (qkv_dwconv): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (6): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (7): Rearrange('b d (w1 x) (w2 y) -> b x y w1 w2 d', w1=1, w2=1)
+            (8): PreNormResidual(
+              (norm): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+              (fn): Attention(
+                (to_qkv): Linear(in_features=64, out_features=192, bias=False)
+                (attend): Sequential(
+                  (0): Softmax(dim=-1)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+                (to_out): Sequential(
+                  (0): Linear(in_features=64, out_features=64, bias=False)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+              )
+            )
+            (9): Rearrange('b x y w1 w2 d -> b d (w1 x) (w2 y)')
+            (10): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (11): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Channel_Attention_grid(
+                (qkv): Conv2d(64, 192, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (qkv_dwconv): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (12): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+          )
+        )
+        (aff): DRT(
+          (fc): Sequential(
+            (0): Linear(in_features=64, out_features=96, bias=True)
+            (1): ReLU(inplace=True)
+            (2): Linear(in_features=96, out_features=96, bias=True)
+            (3): ReLU(inplace=True)
+            (4): Linear(in_features=96, out_features=128, bias=True)
+          )
+        )
+      )
+    )
+    (8): RRDB(
+      (rdb1): ResidualDenseBlock(
+        (conv1): Conv2d(128, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv2): Conv2d(88, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv3): Conv2d(112, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv4): Conv2d(136, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv5): Conv2d(160, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (kernel): Sequential(
+          (0): Linear(in_features=64, out_features=64, bias=False)
+          (1): LeakyReLU(negative_slope=0.1, inplace=True)
+          (2): Linear(in_features=64, out_features=576, bias=False)
+        )
+        (conv): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+        (eca): ECA_layer(
+          (avg_pool): AdaptiveAvgPool2d(output_size=1)
+          (conv): Conv1d(1, 1, kernel_size=(3,), stride=(1,), padding=(1,), bias=False)
+          (sigmoid): Sigmoid()
+        )
+        (lrelu): LeakyReLU(negative_slope=0.2, inplace=True)
+        (osa): GDA_Block(
+          (layer): Sequential(
+            (0): MBConvResidual(
+              (fn): Sequential(
+                (0): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+                (1): GELU(approximate='none')
+                (2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=64)
+                (3): GELU(approximate='none')
+                (4): SqueezeExcitation(
+                  (gate): Sequential(
+                    (0): Reduce('b c h w -> b c', 'mean')
+                    (1): Linear(in_features=64, out_features=16, bias=False)
+                    (2): SiLU()
+                    (3): Linear(in_features=16, out_features=64, bias=False)
+                    (4): Sigmoid()
+                    (5): Rearrange('b c -> b c 1 1')
+                  )
+                )
+                (5): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+              )
+              (dropsample): Dropsample()
+            )
+            (1): Rearrange('b d (x w1) (y w2) -> b x y w1 w2 d', w1=1, w2=1)
+            (2): PreNormResidual(
+              (norm): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+              (fn): Attention(
+                (to_qkv): Linear(in_features=64, out_features=192, bias=False)
+                (attend): Sequential(
+                  (0): Softmax(dim=-1)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+                (to_out): Sequential(
+                  (0): Linear(in_features=64, out_features=64, bias=False)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+              )
+            )
+            (3): Rearrange('b x y w1 w2 d -> b d (x w1) (y w2)')
+            (4): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (5): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Channel_Attention(
+                (qkv): Conv2d(64, 192, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (qkv_dwconv): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (6): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (7): Rearrange('b d (w1 x) (w2 y) -> b x y w1 w2 d', w1=1, w2=1)
+            (8): PreNormResidual(
+              (norm): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+              (fn): Attention(
+                (to_qkv): Linear(in_features=64, out_features=192, bias=False)
+                (attend): Sequential(
+                  (0): Softmax(dim=-1)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+                (to_out): Sequential(
+                  (0): Linear(in_features=64, out_features=64, bias=False)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+              )
+            )
+            (9): Rearrange('b x y w1 w2 d -> b d (w1 x) (w2 y)')
+            (10): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (11): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Channel_Attention_grid(
+                (qkv): Conv2d(64, 192, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (qkv_dwconv): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (12): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+          )
+        )
+        (aff): DRT(
+          (fc): Sequential(
+            (0): Linear(in_features=64, out_features=96, bias=True)
+            (1): ReLU(inplace=True)
+            (2): Linear(in_features=96, out_features=96, bias=True)
+            (3): ReLU(inplace=True)
+            (4): Linear(in_features=96, out_features=128, bias=True)
+          )
+        )
+      )
+      (rdb2): ResidualDenseBlock(
+        (conv1): Conv2d(128, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv2): Conv2d(88, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv3): Conv2d(112, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv4): Conv2d(136, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv5): Conv2d(160, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (kernel): Sequential(
+          (0): Linear(in_features=64, out_features=64, bias=False)
+          (1): LeakyReLU(negative_slope=0.1, inplace=True)
+          (2): Linear(in_features=64, out_features=576, bias=False)
+        )
+        (conv): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+        (eca): ECA_layer(
+          (avg_pool): AdaptiveAvgPool2d(output_size=1)
+          (conv): Conv1d(1, 1, kernel_size=(3,), stride=(1,), padding=(1,), bias=False)
+          (sigmoid): Sigmoid()
+        )
+        (lrelu): LeakyReLU(negative_slope=0.2, inplace=True)
+        (osa): GDA_Block(
+          (layer): Sequential(
+            (0): MBConvResidual(
+              (fn): Sequential(
+                (0): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+                (1): GELU(approximate='none')
+                (2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=64)
+                (3): GELU(approximate='none')
+                (4): SqueezeExcitation(
+                  (gate): Sequential(
+                    (0): Reduce('b c h w -> b c', 'mean')
+                    (1): Linear(in_features=64, out_features=16, bias=False)
+                    (2): SiLU()
+                    (3): Linear(in_features=16, out_features=64, bias=False)
+                    (4): Sigmoid()
+                    (5): Rearrange('b c -> b c 1 1')
+                  )
+                )
+                (5): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+              )
+              (dropsample): Dropsample()
+            )
+            (1): Rearrange('b d (x w1) (y w2) -> b x y w1 w2 d', w1=1, w2=1)
+            (2): PreNormResidual(
+              (norm): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+              (fn): Attention(
+                (to_qkv): Linear(in_features=64, out_features=192, bias=False)
+                (attend): Sequential(
+                  (0): Softmax(dim=-1)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+                (to_out): Sequential(
+                  (0): Linear(in_features=64, out_features=64, bias=False)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+              )
+            )
+            (3): Rearrange('b x y w1 w2 d -> b d (x w1) (y w2)')
+            (4): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (5): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Channel_Attention(
+                (qkv): Conv2d(64, 192, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (qkv_dwconv): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (6): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (7): Rearrange('b d (w1 x) (w2 y) -> b x y w1 w2 d', w1=1, w2=1)
+            (8): PreNormResidual(
+              (norm): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+              (fn): Attention(
+                (to_qkv): Linear(in_features=64, out_features=192, bias=False)
+                (attend): Sequential(
+                  (0): Softmax(dim=-1)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+                (to_out): Sequential(
+                  (0): Linear(in_features=64, out_features=64, bias=False)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+              )
+            )
+            (9): Rearrange('b x y w1 w2 d -> b d (w1 x) (w2 y)')
+            (10): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (11): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Channel_Attention_grid(
+                (qkv): Conv2d(64, 192, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (qkv_dwconv): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (12): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+          )
+        )
+        (aff): DRT(
+          (fc): Sequential(
+            (0): Linear(in_features=64, out_features=96, bias=True)
+            (1): ReLU(inplace=True)
+            (2): Linear(in_features=96, out_features=96, bias=True)
+            (3): ReLU(inplace=True)
+            (4): Linear(in_features=96, out_features=128, bias=True)
+          )
+        )
+      )
+    )
+    (9): RRDB(
+      (rdb1): ResidualDenseBlock(
+        (conv1): Conv2d(128, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv2): Conv2d(88, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv3): Conv2d(112, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv4): Conv2d(136, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv5): Conv2d(160, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (kernel): Sequential(
+          (0): Linear(in_features=64, out_features=64, bias=False)
+          (1): LeakyReLU(negative_slope=0.1, inplace=True)
+          (2): Linear(in_features=64, out_features=576, bias=False)
+        )
+        (conv): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+        (eca): ECA_layer(
+          (avg_pool): AdaptiveAvgPool2d(output_size=1)
+          (conv): Conv1d(1, 1, kernel_size=(3,), stride=(1,), padding=(1,), bias=False)
+          (sigmoid): Sigmoid()
+        )
+        (lrelu): LeakyReLU(negative_slope=0.2, inplace=True)
+        (osa): GDA_Block(
+          (layer): Sequential(
+            (0): MBConvResidual(
+              (fn): Sequential(
+                (0): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+                (1): GELU(approximate='none')
+                (2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=64)
+                (3): GELU(approximate='none')
+                (4): SqueezeExcitation(
+                  (gate): Sequential(
+                    (0): Reduce('b c h w -> b c', 'mean')
+                    (1): Linear(in_features=64, out_features=16, bias=False)
+                    (2): SiLU()
+                    (3): Linear(in_features=16, out_features=64, bias=False)
+                    (4): Sigmoid()
+                    (5): Rearrange('b c -> b c 1 1')
+                  )
+                )
+                (5): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+              )
+              (dropsample): Dropsample()
+            )
+            (1): Rearrange('b d (x w1) (y w2) -> b x y w1 w2 d', w1=1, w2=1)
+            (2): PreNormResidual(
+              (norm): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+              (fn): Attention(
+                (to_qkv): Linear(in_features=64, out_features=192, bias=False)
+                (attend): Sequential(
+                  (0): Softmax(dim=-1)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+                (to_out): Sequential(
+                  (0): Linear(in_features=64, out_features=64, bias=False)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+              )
+            )
+            (3): Rearrange('b x y w1 w2 d -> b d (x w1) (y w2)')
+            (4): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (5): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Channel_Attention(
+                (qkv): Conv2d(64, 192, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (qkv_dwconv): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (6): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (7): Rearrange('b d (w1 x) (w2 y) -> b x y w1 w2 d', w1=1, w2=1)
+            (8): PreNormResidual(
+              (norm): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+              (fn): Attention(
+                (to_qkv): Linear(in_features=64, out_features=192, bias=False)
+                (attend): Sequential(
+                  (0): Softmax(dim=-1)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+                (to_out): Sequential(
+                  (0): Linear(in_features=64, out_features=64, bias=False)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+              )
+            )
+            (9): Rearrange('b x y w1 w2 d -> b d (w1 x) (w2 y)')
+            (10): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (11): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Channel_Attention_grid(
+                (qkv): Conv2d(64, 192, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (qkv_dwconv): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (12): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+          )
+        )
+        (aff): DRT(
+          (fc): Sequential(
+            (0): Linear(in_features=64, out_features=96, bias=True)
+            (1): ReLU(inplace=True)
+            (2): Linear(in_features=96, out_features=96, bias=True)
+            (3): ReLU(inplace=True)
+            (4): Linear(in_features=96, out_features=128, bias=True)
+          )
+        )
+      )
+      (rdb2): ResidualDenseBlock(
+        (conv1): Conv2d(128, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv2): Conv2d(88, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv3): Conv2d(112, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv4): Conv2d(136, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (conv5): Conv2d(160, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (kernel): Sequential(
+          (0): Linear(in_features=64, out_features=64, bias=False)
+          (1): LeakyReLU(negative_slope=0.1, inplace=True)
+          (2): Linear(in_features=64, out_features=576, bias=False)
+        )
+        (conv): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+        (eca): ECA_layer(
+          (avg_pool): AdaptiveAvgPool2d(output_size=1)
+          (conv): Conv1d(1, 1, kernel_size=(3,), stride=(1,), padding=(1,), bias=False)
+          (sigmoid): Sigmoid()
+        )
+        (lrelu): LeakyReLU(negative_slope=0.2, inplace=True)
+        (osa): GDA_Block(
+          (layer): Sequential(
+            (0): MBConvResidual(
+              (fn): Sequential(
+                (0): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+                (1): GELU(approximate='none')
+                (2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=64)
+                (3): GELU(approximate='none')
+                (4): SqueezeExcitation(
+                  (gate): Sequential(
+                    (0): Reduce('b c h w -> b c', 'mean')
+                    (1): Linear(in_features=64, out_features=16, bias=False)
+                    (2): SiLU()
+                    (3): Linear(in_features=16, out_features=64, bias=False)
+                    (4): Sigmoid()
+                    (5): Rearrange('b c -> b c 1 1')
+                  )
+                )
+                (5): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+              )
+              (dropsample): Dropsample()
+            )
+            (1): Rearrange('b d (x w1) (y w2) -> b x y w1 w2 d', w1=1, w2=1)
+            (2): PreNormResidual(
+              (norm): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+              (fn): Attention(
+                (to_qkv): Linear(in_features=64, out_features=192, bias=False)
+                (attend): Sequential(
+                  (0): Softmax(dim=-1)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+                (to_out): Sequential(
+                  (0): Linear(in_features=64, out_features=64, bias=False)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+              )
+            )
+            (3): Rearrange('b x y w1 w2 d -> b d (x w1) (y w2)')
+            (4): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (5): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Channel_Attention(
+                (qkv): Conv2d(64, 192, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (qkv_dwconv): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (6): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (7): Rearrange('b d (w1 x) (w2 y) -> b x y w1 w2 d', w1=1, w2=1)
+            (8): PreNormResidual(
+              (norm): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+              (fn): Attention(
+                (to_qkv): Linear(in_features=64, out_features=192, bias=False)
+                (attend): Sequential(
+                  (0): Softmax(dim=-1)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+                (to_out): Sequential(
+                  (0): Linear(in_features=64, out_features=64, bias=False)
+                  (1): Dropout(p=0.0, inplace=False)
+                )
+              )
+            )
+            (9): Rearrange('b x y w1 w2 d -> b d (w1 x) (w2 y)')
+            (10): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (11): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Channel_Attention_grid(
+                (qkv): Conv2d(64, 192, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (qkv_dwconv): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+            (12): Conv_PreNormResidual(
+              (norm): LayerNorm2d()
+              (fn): Gated_Conv_FeedForward(
+                (project_in): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (dwconv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=128, bias=False)
+                (project_out): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              )
+            )
+          )
+        )
+        (aff): DRT(
+          (fc): Sequential(
+            (0): Linear(in_features=64, out_features=96, bias=True)
+            (1): ReLU(inplace=True)
+            (2): Linear(in_features=96, out_features=96, bias=True)
+            (3): ReLU(inplace=True)
+            (4): Linear(in_features=96, out_features=128, bias=True)
+          )
+        )
+      )
+    )
+  )
+  (conv_body): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+  (conv_hr): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+  (conv_last): Conv2d(64, 3, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+  (lrelu): LeakyReLU(negative_slope=0.2, inplace=True)
+  (upsample): Upsample(
+    (0): Conv2d(64, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (1): PixelShuffle(upscale_factor=2)
+    (2): Conv2d(64, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (3): PixelShuffle(upscale_factor=2)
+  )
+)
+2024-07-28 00:50:26,861 INFO: Loading DRATNet model from /data/cs/BlindSR/checkpoints/DRAT/DRAT_iso_260000_fft.pth, with param key: [params_ema].
+2024-07-28 00:50:27,093 INFO: Model [SRModel] is created.
+2024-07-28 00:50:27,093 INFO: Testing Set5-bicubic...
+2024-07-28 00:50:31,527 INFO: Validation Set5-bicubic
+	 # psnr: 32.6214	Best: 32.6214 @ DRAN_x4_Set5 iter
+	 # ssim: 0.9021	Best: 0.9021 @ DRAN_x4_Set5 iter
+

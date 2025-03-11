@@ -1,0 +1,144 @@
+# general settings
+name: DRAT_PSNR_x3_f64b10g24_DIF2K
+model_type: SRModel
+scale: 3
+num_gpu: 1  # set num_gpu: 0 for cpu mode
+manual_seed: 0
+
+# dataset and data loader settings
+datasets:
+  train:
+    name: DIF2K
+    type: PairedImageDataset
+    dataroot_gt: /data/cs/DIF2K_rd
+    dataroot_lq: /data/cs/newd_dif2kx3/LRblur/x3/
+    io_backend:
+      type: disk
+
+
+    gt_size: 192
+    use_hflip: true
+    use_rot: true
+
+    # data loader
+    num_worker_per_gpu: 6
+    batch_size_per_gpu: 16
+    dataset_enlarge_ratio: 100
+    prefetch_mode: ~
+
+  val:
+    name: Set5-1.35
+    type: PairedImageDataset
+    dataroot_gt: /data/cs/code/DSSR-main/datasets/Set5G8/HR/x3/1.35
+    dataroot_lq: /data/cs/code/DSSR-main/datasets/Set5G8/LRblur/x3/1.35
+    io_backend:
+      type: disk
+
+  val_2:
+    name: Set5-1.95
+    type: PairedImageDataset
+    dataroot_gt: /data/cs/code/DSSR-main/datasets/Set5G8/HR/x3/1.95
+    dataroot_lq: /data/cs/code/DSSR-main/datasets/Set5G8/LRblur/x3/1.95
+    io_backend:
+      type: disk
+  val_3:
+    name: Set5-2.4
+    type: PairedImageDataset
+    dataroot_gt: /data/cs/code/DSSR-main/datasets/Set5G8/HR/x3/2.4
+    dataroot_lq: /data/cs/code/DSSR-main/datasets/Set5G8/LRblur/x3/2.4
+    io_backend:
+      type: disk
+
+  val_4:
+    name: Set14-1.35
+    type: PairedImageDataset
+    dataroot_gt: /data/cs/code/DSSR-main/datasets/Set14G8/HR/x3/1.35
+    dataroot_lq: /data/cs/code/DSSR-main/datasets/Set14G8/LRblur/x3/1.35
+    io_backend:
+      type: disk
+
+  val_5:
+    name: Set14-1.95
+    type: PairedImageDataset
+    dataroot_gt: /data/cs/code/DSSR-main/datasets/Set14G8/HR/x3/1.95
+    dataroot_lq: /data/cs/code/DSSR-main/datasets/Set14G8/LRblur/x3/1.95
+    io_backend:
+      type: disk
+
+  val_6:
+    name: Set14-2.4
+    type: PairedImageDataset
+    dataroot_gt: /data/cs/code/DSSR-main/datasets/Set14G8/HR/x3/2.4
+    dataroot_lq: /data/cs/code/DSSR-main/datasets/Set14G8/LRblur/x3/2.4
+    io_backend:
+      type: disk
+
+# network structures
+network_g:
+  type: DRANNet
+  num_in_ch: 3
+  num_out_ch: 3
+  scale: 3
+  num_feat: 64
+  num_block: 10
+  num_grow_ch: 24
+
+
+# path
+path:
+  pretrain_network_g: ~
+  strict_load_g: true
+  resume_state: ~
+
+# training settings
+train:
+  ema_decay: 0.999
+  optim_g:
+    type: Adam
+    lr: !!float 2e-4
+    weight_decay: 0
+    betas: [0.9, 0.99]
+
+  scheduler:
+    type: CosineAnnealingRestartLR
+    periods: [250000, 250000, 250000, 250000]
+    restart_weights: [1, 1, 1, 1]
+    eta_min: !!float 1e-7
+
+  total_iter: 1000000
+  warmup_iter: -1  # no warm up
+
+  # losses
+  pixel_opt:
+    type: L1Loss
+    loss_weight: 1.0
+    reduction: mean
+
+# validation settings
+val:
+  val_freq: !!float 5000
+  save_img: false
+
+  metrics:
+    psnr: # metric name, can be arbitrary
+      type: calculate_psnr
+      crop_border: 3
+      test_y_channel: true
+    ssim: # metric name, can be arbitrary
+      type: calculate_ssim
+      crop_border: 3
+      test_y_channel: true
+
+# logging settings
+logger:
+  print_freq: 100
+  save_checkpoint_freq: !!float 5e3
+  use_tb_logger: true
+  wandb:
+    project: ~
+    resume_id: ~
+
+# dist training settings
+dist_params:
+  backend: nccl
+  port: 29500

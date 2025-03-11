@@ -1,0 +1,54 @@
+Metadata-Version: 2.1
+Name: basicsr
+Version: 1.4.2
+Summary: Open Source Image and Video Super-Resolution Toolbox
+Home-page: https://github.com/xinntao/BasicSR
+Author: Xintao Wang
+Author-email: xintao.wang@outlook.com
+License: Apache License 2.0
+Keywords: computer vision,restoration,super resolution
+Classifier: Development Status :: 4 - Beta
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Description-Content-Type: text/markdown
+Requires-Dist: addict
+Requires-Dist: future
+Requires-Dist: lmdb
+Requires-Dist: numpy>=1.17
+Requires-Dist: opencv-python
+Requires-Dist: Pillow
+Requires-Dist: pyyaml
+Requires-Dist: requests
+Requires-Dist: scikit-image
+Requires-Dist: scipy
+Requires-Dist: tb-nightly
+Requires-Dist: torch>=1.7
+Requires-Dist: torchvision
+Requires-Dist: tqdm
+Requires-Dist: yapf
+
+# Code File Descriptions
+
+| File                                      | Description                                                  |
+| ----------------------------------------- | ------------------------------------------------------------ |
+| basicsr/archs/drat_arch.py                | Implementation of DRAT.                                      |
+| basicsr/add/encoder.py                    | Implementation of aux and blur encoder.                      |
+| basicsr/losses/basic_loss.py              | Definitions of the loss functions.                           |
+| degradation/scripts/generate_blur_data.py | Code for generating training and test data for Isotropic  and Anisotropic Gaussian kernels. |
+| inference/inference_drat.py               | Code for inferring Super-Resolution (SR) results by using DRAT. |
+| options/test/xxx/xxx.yml                  | YML configuration file for testing.                          |
+| options/train/xxx/xxx.yml                 | YML configuration file for training.                         |
+| basicsr/utils.py                          | Various utilities.                                           |
+
+You can use the following commands to train and test:
+
+```sh
+# For training:
+python train.py -opt=options/train/DRAT/setting1/x4/train_DRAT_x4.yml
+
+# For testing:
+python test.py -opt=options/test/DRAT/setting1/x4/test_urban100.yml
+```

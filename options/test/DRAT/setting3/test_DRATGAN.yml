@@ -1,0 +1,56 @@
+name: DRATGAN_400000
+model_type: RealESRGANModel
+scale: 4
+num_gpu: 1  # set num_gpu: 0 for cpu mode
+manual_seed: 0
+
+datasets:
+  test_1:
+    name: RealSR_Canon
+    type: PairedImageDataset
+    dataroot_gt: /data0/cs/datasets/test/RealSR_Canon/HR/
+    dataroot_lq: /data0/cs/datasets/test/RealSR_Canon/LR/
+    io_backend:
+      type: disk
+  test_2:
+    name: RealSR_Nikon
+    type: PairedImageDataset
+    dataroot_gt: /data0/cs/datasets/test/RealSR_Nikon/HR/
+    dataroot_lq: /data0/cs/datasets/test/RealSR_Nikon/LR/
+    io_backend:
+      type: disk
+
+# network structures
+network_g:
+  type: DRATNet
+  num_in_ch: 3
+  num_out_ch: 3
+  scale: 4
+  num_feat: 64
+  num_block: 10
+  num_grow_ch: 24
+
+# path
+path:
+  pretrain_network_g: /data0/cs/DRAT_code/experiments/DRATGAN/models/net_g_400000.pth
+  param_key_g: params_ema
+  strict_load_g: false
+
+# validation settings
+val:
+  save_img: True
+  suffix: ~  # add suffix to saved images, if None, use exp name
+
+  metrics:
+    psnr: # metric name, can be arbitrary
+      type: calculate_psnr
+      crop_border: 4
+      test_y_channel: True
+    ssim:
+      type: calculate_ssim
+      crop_border: 4
+      test_y_channel: True
+    niqe:
+      type: calculate_niqe
+      crop_border: 4
+      test_y_channel: True

@@ -1,0 +1,94 @@
+name: DRAN_x4_Urban100
+model_type: SRModel
+scale: 4
+num_gpu: 1  # set num_gpu: 0 for cpu mode
+manual_seed: 0
+
+datasets:
+  test_1:
+    name: Urban100-1.8
+    type: PairedImageDataset
+    dataroot_gt: /data/chensen/test_data/dataset/Urban100G8/HR/x4/1.8/
+    dataroot_lq: /data/chensen/test_data/dataset/Urban100G8/LRblur/x4/1.8/
+    io_backend:
+      type: disk
+  test_2:
+    name: Urban100-2.0
+    type: PairedImageDataset
+    dataroot_gt: /data/chensen/test_data/dataset/Urban100G8/HR/x4/2.0/
+    dataroot_lq: /data/chensen/test_data/dataset/Urban100G8/LRblur/x4/2.0/
+    io_backend:
+      type: disk
+  test_3:
+    name: Urban100-2.2
+    type: PairedImageDataset
+    dataroot_gt: /data/chensen/test_data/dataset/Urban100G8/HR/x4/2.2/
+    dataroot_lq: /data/chensen/test_data/dataset/Urban100G8/LRblur/x4/2.2/
+    io_backend:
+      type: disk
+  test_4:
+    name: Urban100-2.4000000000000004
+    type: PairedImageDataset
+    dataroot_gt: /data/chensen/test_data/dataset/Urban100G8/HR/x4/2.4000000000000004/ 
+    dataroot_lq: /data/chensen/test_data/dataset/Urban100G8/LRblur/x4/2.4000000000000004/
+    io_backend:
+      type: disk
+  test_5:
+    name: Urban100-2.6
+    type: PairedImageDataset
+    dataroot_gt: /data/chensen/test_data/dataset/Urban100G8/HR/x4/2.6/
+    dataroot_lq: /data/chensen/test_data/dataset/Urban100G8/LRblur/x4/2.6/
+    io_backend:
+      type: disk
+  test_6:
+    name: Urban100-2.8
+    type: PairedImageDataset
+    dataroot_gt: /data/chensen/test_data/dataset/Urban100G8/HR/x4/2.8/
+    dataroot_lq: /data/chensen/test_data/dataset/Urban100G8/LRblur/x4/2.8/
+    io_backend:
+      type: disk
+  test_7:
+    name: Urban100-3.0
+    type: PairedImageDataset
+    dataroot_gt: /data/chensen/test_data/dataset/Urban100G8/HR/x4/3.0/
+    dataroot_lq: /data/chensen/test_data/dataset/Urban100G8/LRblur/x4/3.0/
+    io_backend:
+      type: disk
+  test_8:
+    name: Urban100-3.2
+    type: PairedImageDataset
+    dataroot_gt: /data/chensen/test_data/dataset/Urban100G8/HR/x4/3.2/
+    dataroot_lq: /data/chensen/test_data/dataset/Urban100G8/LRblur/x4/3.2/
+    io_backend:
+      type: disk
+
+# network structures
+network_g:
+  type: DRANNet
+  num_in_ch: 3
+  num_out_ch: 3
+  scale: 4
+  num_feat: 64
+  num_block: 10
+  num_grow_ch: 24
+
+# path
+path:
+  pretrain_network_g: /data/chensen/code/BasicSR/checkpoint/DRAN/setting1/DRAN_x4.pth
+  param_key_g: params_ema
+  strict_load_g: false
+
+# validation settings
+val:
+  save_img: True
+  suffix: ~  # add suffix to saved images, if None, use exp name
+
+  metrics:
+    psnr: # metric name, can be arbitrary
+      type: calculate_psnr
+      crop_border: 4
+      test_y_channel: True
+    ssim:
+      type: calculate_ssim
+      crop_border: 4
+      test_y_channel: True
