@@ -5,7 +5,7 @@
 # News:
 - Our **DRAT** is accepted by AAAI2025✨!
 # Overview of DRAT
- 
+ [<img src="assert/g299.png" width="500px" height="320px"/>]
 # Code File Descriptions
 
 | File                                      | Description                                                  |
