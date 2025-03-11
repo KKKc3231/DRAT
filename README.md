@@ -32,6 +32,8 @@ python setup.py develop
 | options/test/xxx/xxx.yml                  | YML configuration file for testing.                          |
 | options/train/xxx/xxx.yml                 | YML configuration file for training.                         |
 | basicsr/utils.py                          | Various utilities.                                           |
+| options/train/xxx/xxx.yml                 | YML configuration file for training.                         |
+| moco                                      | Using MoCo to train Encoder for degradation representation learning                           |
 
 You can use the following commands to train and test:
 
