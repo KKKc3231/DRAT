@@ -80,8 +80,10 @@ python inference_drat.py --input your_input_path --output your_save_path
 ```
 ## Result
 ### Comparison of Isotropic Gaussian Kernels (Gaussian8)
-
+ <img src="assert/iso_1.png"/>
 ### Comparison of Anisotropic Gaussian Kernels (DIV2KRK)
-
-## Other Super-Resolution Visualization
-
+ <img src="assert/div2krk.png"/>
+### Comparison of Real-World Degradation (RealSR)
+ <img src="assert/realsr.png"/>
+### Other Super-Resolution Visualization
+ <img src="assert/comic.png"/>
