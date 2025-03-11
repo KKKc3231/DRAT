@@ -37,7 +37,11 @@ python setup.py develop
 
 You can use the following commands to train and test:
 
-## Train and Test Dataset
+## Dataset Prearation
+We use DIV2K and Flickr2K as our training datasets (totally 3450 images). 
+```python
+
+```
 
 - you can use the following code to generate the blind-sr dataset.
 ```python
