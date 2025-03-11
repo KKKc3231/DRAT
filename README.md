@@ -1,5 +1,6 @@
 # [✨AAAI 2025] DRAT: Unsupervised Degradation Representation Aware Transform for Real-World Blind Image Super-Resolution
-> [Sen Chen](https://github.com/KKKc3231)
+> [Sen Chen](https://github.com/KKKc3231), Hongying Liu, Chaowei Fang, Fanhua Shang, Yuanyuan Liu, Liang Wan, Dongmei Jiang
+Yaowei Wang
 
 
 
