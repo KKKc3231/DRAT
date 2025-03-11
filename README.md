@@ -54,16 +54,16 @@ python generate_blur_traindata.py # for iso/aniso blind sr (for training)
 python generate_realesrgan_data.py # for real-world sr (for training)
 python generate_blur_testdata.py # for generate iso/aniso test datasets
 ```
-
-- you can use the following code to generate the blind-sr dataset.
-```python
-
-
+## Train
+- The alorithm is in `archs/drat_arch.py`.
+- Please Modify `options/train/SettingX/xx.yml` to set path, iterations, and other parameters.
+- To train the DRAT, running below commands. 
 ```
-```sh
 # For training:
 python train.py -opt=options/train/DRAT/setting1/x4/train_DRAT_x4.yml
-
+python train.py -opt=options/train/DRAT/setting2/x4/train_DRAT_x4.yml
+python train.py -opt=options/train/DRAT/setting3/x4/train_DRAT_x4.yml
+``
 # For testing:
 python test.py -opt=options/test/DRAT/setting1/x4/test_urban100.yml
 
