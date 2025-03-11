@@ -16,6 +16,7 @@ This code is based on basicsr.
 ```sh
 conda env create -n DRAT -f environment.yml
 
+python setup.py develop
 ```
 
 
@@ -26,7 +27,7 @@ conda env create -n DRAT -f environment.yml
 | basicsr/archs/drat_arch.py                | Implementation of DRAT.                                      |
 | basicsr/add/encoder.py                    | Implementation of aux and blur encoder.                      |
 | basicsr/losses/basic_loss.py              | Definitions of the loss functions.                           |
-| degradation/scripts/generate_blur_data.py | Code for generating training and test data for Isotropic  and Anisotropic Gaussian kernels. |
+| degradation/scripts                       | Code for generating training and test data for Isotropic, Anisotropic Gaussian kernels and complex degradations.|
 | inference/inference_drat.py               | Code for inferring Super-Resolution (SR) results by using DRAT. |
 | options/test/xxx/xxx.yml                  | YML configuration file for testing.                          |
 | options/train/xxx/xxx.yml                 | YML configuration file for training.                         |
