@@ -1,5 +1,8 @@
 # [✨AAAI 2025] DRAT: Unsupervised Degradation Representation Aware Transform for Real-World Blind Image Super-Resolution
-![image](https://github.com/user-attachments/assets/93b5b21f-eaeb-4f34-93d8-5f55bf98fa33)
+---
+
+# [News]
+- Our **DRAT** is accepted by AAAI2025✨!
 
 
  
