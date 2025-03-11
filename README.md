@@ -2,11 +2,8 @@
 > [Sen Chen](https://github.com/KKKc3231), Hongying Liu, Chaowei Fang, Fanhua Shang, Yuanyuan Liu, Liang Wan, Dongmei Jiang, Yaowei Wang
 
 > School of Artiffcial Intelligence, Xidian University
-
-
 # News:
 - Our **DRAT** is accepted by AAAI2025✨!
-
 # Overview of DRAT
  
 # Code File Descriptions
