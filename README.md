@@ -1,4 +1,4 @@
-# ✨ Super-Resolution visualization
+# ✨ DRAT (AAAI 2025)
 ## :honeybee: Urban100
 [<img src="assert/urban_05.png" height="288px["/>](https://imgsli.com/Mjc0NjUz) [<img src="assert/urban_91.png" height="288px["/>](https://imgsli.com/Mjc0NjUy)
 ## :dolphin:M109
