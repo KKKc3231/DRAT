@@ -4,8 +4,10 @@
 > School of Artiffcial Intelligence, Xidian University
 # News:
 - Our **DRAT** is accepted by AAAI2025✨!
+  
 # Overview of DRAT
  <img src="assert/g299.png"/>
+ 
 # Code File Descriptions
 
 | File                                      | Description                                                  |
