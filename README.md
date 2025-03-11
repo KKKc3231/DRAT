@@ -57,20 +57,26 @@ python generate_blur_testdata.py # for generate iso/aniso test datasets
 ## Train
 - The alorithm is in `archs/drat_arch.py`.
 - Please Modify `options/train/SettingX/xx.yml` to set path, iterations, and other parameters.
-- To train the DRAT, running below commands. 
-```
-# For training:
+- To train the DRAT, run the commands below.
+```python
 python train.py -opt=options/train/DRAT/setting1/x4/train_DRAT_x4.yml
 python train.py -opt=options/train/DRAT/setting2/x4/train_DRAT_div2krkx2.yml
 python train.py -opt=options/train/DRAT/setting3/x4/train_DRATGAN.yml
-``
+```
 
-### Test and Infer
-- To test and infer other image folders, run the commands below.
-# For testing:
+# Test
+- Before test, please modify the model and data path.
+- To test the DRAT, run the commands below.
+```python
 python test.py -opt=options/test/DRAT/setting1/x4/test_urban100.yml
+python test.py -opt=options/test/DRAT/setting2/x4/test_div2krkx4.yml
+python test.py -opt=options/test/DRAT/setting2/x4/test_DRATGAN.yml
+```
 
-# For inference
-cd inference
+# Infer
+- To infer DRAT on other image folders.
+- To infer the DRAT, run the commands below.
+- cd `inference/`
+```python
 python inference_drat.py --input your_input_path --output your_save_path
 ```
