@@ -44,7 +44,7 @@ You can use the following commands to train and test:
 
 - For Anisotropic Gaussian kernels degradation, you can download DIV2KRK test datasets from [DIV2KRK](https://data.vision.ee.ethz.ch/cvl/DIV2K/).
 
-- For real-world degradation, you can download the RealSR_V3(Nikon and Canon) and DRealSR test datasets from [RealSR(V3)](https://drive.google.com/file/d/17ZMjo-zwFouxnm_aFM6CUHBwgRrLZqIM/view) and [DRealSR](https://drive.google.com/drive/folders/1_EjDsD2-bBXb0iRonbWI6ihuHquxdna1) and [ImageNet256_x4_sr](https://drive.google.com/file/d/1NhmpON2dB2LjManfX6uIj8Pj_Jx6N-6l/view) (from ResShift)
+- For real-world degradation test, you can download the [RealSR_V3(Nikon and Canon)](https://drive.google.com/file/d/17ZMjo-zwFouxnm_aFM6CUHBwgRrLZqIM/view), [DRealSR](https://drive.google.com/drive/folders/1_EjDsD2-bBXb0iRonbWI6ihuHquxdna1) and [ImageNet256_x4_sr](https://drive.google.com/file/d/1NhmpON2dB2LjManfX6uIj8Pj_Jx6N-6l/view) (from ResShift)
 ```python
 cd degradation/scripts/
 python extract_subimages.py # crop the images to subimages
