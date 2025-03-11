@@ -9,6 +9,12 @@
  <img src="assert/g299.png"/>
 
 ## Environment
+This code is based on basicsr.
+
+- python >= 3.9
+- pytorch == 1.13.1
+
+
 
 ## Code File Descriptions
 
