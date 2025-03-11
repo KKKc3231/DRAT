@@ -64,7 +64,7 @@ python train.py -opt=options/train/DRAT/setting2/x4/train_DRAT_div2krkx2.yml
 python train.py -opt=options/train/DRAT/setting3/x4/train_DRATGAN.yml
 ```
 
-# Test
+# Test & Infer
 - Before test, please modify the model and data path.
 - To test the DRAT, run the commands below.
 ```python
@@ -72,8 +72,6 @@ python test.py -opt=options/test/DRAT/setting1/x4/test_urban100.yml
 python test.py -opt=options/test/DRAT/setting2/x4/test_div2krkx4.yml
 python test.py -opt=options/test/DRAT/setting2/x4/test_DRATGAN.yml
 ```
-
-# Infer
 - To infer DRAT on other image folders.
 - To infer the DRAT, run the commands below.
 - cd `inference/`
