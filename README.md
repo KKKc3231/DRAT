@@ -27,13 +27,14 @@ python setup.py develop
 | basicsr/archs/drat_arch.py                | Implementation of DRAT.                                      |
 | basicsr/add/encoder.py                    | Implementation of aux and blur encoder.                      |
 | basicsr/losses/basic_loss.py              | Definitions of the loss functions.                           |
-| degradation/scripts                       | Code for generating training and test data for Isotropic, Anisotropic Gaussian kernels and complex degradations.|
+| degradation/scripts/                      | Code for generating training and test data for Isotropic, Anisotropic Gaussian kernels and complex degradations.|
 | inference/inference_drat.py               | Code for inferring Super-Resolution (SR) results by using DRAT. |
 | options/test/xxx/xxx.yml                  | YML configuration file for testing.                          |
 | options/train/xxx/xxx.yml                 | YML configuration file for training.                         |
 | basicsr/utils.py                          | Various utilities.                                           |
 | options/train/xxx/xxx.yml                 | YML configuration file for training.                         |
-| moco                                      | Using MoCo to train Encoder for degradation representation learning                           |
+| moco/                                     | Using MoCo to train Encoder for degradation representation learning                           |
+| checkpoints/                              | Pretrained models                          |
 
 You can use the following commands to train and test:
 
