@@ -19,7 +19,6 @@ conda env create -n DRAT -f environment.yml
 python setup.py develop
 ```
 
-
 ## Code File Descriptions
 
 | File                                      | Description                                                  |
@@ -38,6 +37,13 @@ python setup.py develop
 
 You can use the following commands to train and test:
 
+## Train and Test Dataset
+
+- you can use the following code to generate the blind-sr dataset.
+```python
+
+
+```
 ```sh
 # For training:
 python train.py -opt=options/train/DRAT/setting1/x4/train_DRAT_x4.yml
