@@ -49,10 +49,12 @@ def main():
     model.eval()
     model = model.to(device)
 
-    os.makedirs(args.output, exist_ok=True)
+    if not os.path.exists(args.output):
+        os.makedirs(args.output)
+
     for idx, path in enumerate(sorted(glob.glob(os.path.join(args.input, '*')))):
         imgname = os.path.splitext(os.path.basename(path))[0]
-        print('Testing123', idx, imgname)
+        print('Testing', idx, ": ", imgname)
         # read image
         img = cv2.imread(path, cv2.IMREAD_COLOR).astype(np.float32) / 255.
         img = torch.from_numpy(np.transpose(img[:, :, [2, 1, 0]], (2, 0, 1))).float()
