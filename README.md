@@ -81,9 +81,24 @@ python inference_drat.py --input your_input_path --output your_save_path
 ## Result
 ### Comparison of Isotropic Gaussian Kernels (Gaussian8)
  <img src="assert/iso_1.png"/>
+ 
 ### Comparison of Anisotropic Gaussian Kernels (DIV2KRK)
  <img src="assert/div2krk.png"/>
+ 
 ### Comparison of Real-World Degradation (RealSR)
  <img src="assert/realsr.png"/>
+ 
 ### Other Super-Resolution Visualization
  <img src="assert/comic.png"/>
+
+## Citations
+If our code helps your research or work, please consider citing our paper. The following is a BibTeX reference.
+```
+@inproceedings{hqqh,
+  title={Unsupervised Degradation Representation Aware Transform for Real-World Blind Image Super-Resolution},
+  author={Snd},
+  booktitle={这棵树成精后，天天求我教它跳广场舞🌳},
+  pages={10086-12306},
+  year={2025}
+}
+```
