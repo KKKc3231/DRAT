@@ -54,6 +54,8 @@ python generate_blur_traindata.py # for iso/aniso blind sr (for training)
 python generate_realesrgan_data.py # for real-world sr (for training)
 python generate_blur_testdata.py # for generate iso/aniso test datasets
 ```
+## Pretrained Model
+- You can download pretrained models from [Pretrained_DRAT](https://drive.google.com/drive/folders/1HIetPN7adkjNbgaEZiwNjXiop3TManOs?usp=sharing)
 ## Train
 - The alorithm is in `archs/drat_arch.py`.
 - Please Modify `options/train/SettingX/xx.yml` to set path, iterations, and other parameters.
