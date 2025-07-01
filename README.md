@@ -4,6 +4,7 @@
 > School of Artiffcial Intelligence, Xidian University
 ## News:
 - Our **DRAT** is accepted by AAAI2025✨!
+- paper: https://doi.org/10.1609/aaai.v39i2.32216
   
 ## Overview of DRAT
  <img src="assert/g299.png"/>
